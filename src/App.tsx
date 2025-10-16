@@ -2,7 +2,7 @@ import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { useAuthStore } from './stores/useAuthStore';
-
+import WallRoll from './pages/WallRollPage';
 // Layout Components (loaded eagerly as they are almost always needed)
 import Layout from './components/Layout/Layout';
 import AdminLayout from './components/Layout/AdminLayout';
@@ -75,6 +75,7 @@ function App() {
               <Route path="privacy" element={<PrivacyPolicy />} />
               <Route path="bestsellers" element={<Bestsellers />} />
               <Route path="*" element={<NotFound />} />
+              <Route path='wallroll' element={<WallRoll/>}></Route>
             </Route>
 
             {/* Standalone pages (no main layout) */}
