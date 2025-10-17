@@ -136,7 +136,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   // Debug log
-  console.log('ProductCard:', product.name, imgSrc);
+  // console.log('ProductCard:', product.name, imgSrc);
 
 
 

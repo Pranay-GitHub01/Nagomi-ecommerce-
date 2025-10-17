@@ -1,17 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Product } from '../../types'; // Re-using the same Product type
-import { useWishlistStore } from '../../stores/useWishlistStore';
-import { useAuthStore } from '../../stores/useAuthStore';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Heart } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Product } from "../../../src/types/index"; 
+import { useWishlistStore } from "../../stores/useWishlistStore";
+import { useAuthStore } from "../../stores/useAuthStore";
 
 interface WallRollCardProps {
   product: Product;
 }
 
 const WallRollCard: React.FC<WallRollCardProps> = ({ product }) => {
-  const { addToWishlist, removeFromWishlist, isInWishlist, checkWishlistStatus } = useWishlistStore();
+  const {
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
+    checkWishlistStatus,
+  } = useWishlistStore();
   const { user } = useAuthStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isLoadingWishlist, setIsLoadingWishlist] = useState(false);
@@ -22,14 +27,14 @@ const WallRollCard: React.FC<WallRollCardProps> = ({ product }) => {
     const checkStatus = async () => {
       const productId = product._id || product.id;
       if (!productId) return;
-      
+
       if (user) {
         setIsLoadingWishlist(true);
         try {
           const status = await checkWishlistStatus(productId);
           setIsWishlisted(status);
         } catch (error) {
-          console.error('Error checking wishlist status:', error);
+          console.error("Error checking wishlist status:", error);
         } finally {
           setIsLoadingWishlist(false);
         }
@@ -62,14 +67,16 @@ const WallRollCard: React.FC<WallRollCardProps> = ({ product }) => {
       setIsLoadingWishlist(false);
       return;
     }
-    
+
     if (isWishlisted) {
       setIsWishlisted(false);
-      removeFromWishlist(productId).catch(() => setIsWishlisted(true))
+      removeFromWishlist(productId)
+        .catch(() => setIsWishlisted(true))
         .finally(() => setIsLoadingWishlist(false));
     } else {
       setIsWishlisted(true);
-      addToWishlist(product).catch(() => setIsWishlisted(false))
+      addToWishlist(product)
+        .catch(() => setIsWishlisted(false))
         .finally(() => setIsLoadingWishlist(false));
     }
   };
@@ -78,20 +85,25 @@ const WallRollCard: React.FC<WallRollCardProps> = ({ product }) => {
   const candidates: string[] = (() => {
     const urls: string[] = [];
     if (Array.isArray(product.images) && product.images.length > 0) {
-      const raw = product.images[0] || '';
+      const raw = product.images[0] || "";
       if (raw) {
-        if (raw.startsWith('http')) urls.push(raw);
-        else if (raw.startsWith('/')) urls.push(raw);
-        else urls.push(`/images/${raw.split('/').pop() || raw}`);
+        if (raw.startsWith("http")) urls.push(raw);
+        else if (raw.startsWith("/")) urls.push(raw);
+        else urls.push(`/images/${raw.split("/").pop() || raw}`);
       }
     }
     const sku = (product as any).skuId;
+
     if (sku) {
-      const base = String(sku).replace(/-WP$/i, '');
-      ['webp', 'jpg', 'jpeg', 'png'].forEach(ext => urls.push(`/images/${sku}.${ext}`));
-      ['webp', 'jpg', 'jpeg', 'png'].forEach(ext => urls.push(`/images/${base}.${ext}`));
+      const base = String(sku).replace(/-WP$/i, "");
+      ["webp", "jpg", "jpeg", "png"].forEach((ext) =>
+        urls.push(`/images/${sku}.${ext}`)
+      );
+      ["webp", "jpg", "jpeg", "png"].forEach((ext) =>
+        urls.push(`/images/${base}.${ext}`)
+      );
     }
-    urls.push('/placeholder.jpg');
+    urls.push("/placeholder.jpg");
     return urls;
   })();
 
@@ -101,7 +113,7 @@ const WallRollCard: React.FC<WallRollCardProps> = ({ product }) => {
   useEffect(() => {
     setImgSrc(candidates[0]);
     setCandidateIndex(0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product._id, product.id]);
 
   const handleImgError = () => {
@@ -115,13 +127,17 @@ const WallRollCard: React.FC<WallRollCardProps> = ({ product }) => {
   // Helper to format price correctly
   const formatPrice = (price: string | number | null | undefined) => {
     if (price === null || price === undefined) return null;
-    const numericPrice = typeof price === 'string' ? parseFloat(price.replace(/[^0-9.-]+/g,"")) : price;
+    const numericPrice =
+      typeof price === "string"
+        ? parseFloat(price.replace(/[^0-9.-]+/g, ""))
+        : price;
     if (isNaN(numericPrice)) return null;
-    return `₹${numericPrice.toLocaleString('en-IN')}`;
+    return `₹${numericPrice.toLocaleString("en-IN")}`;
   };
 
   const displayPrice = formatPrice(product.price);
   const displayOriginalPrice = formatPrice(product.originalPrice);
+  console.log(product)
 
   return (
     <>
@@ -141,7 +157,9 @@ const WallRollCard: React.FC<WallRollCardProps> = ({ product }) => {
         <Link to={`/wallroll/${product._id || product.id}`} className="block flex flex-col h-full">
           <div className="relative overflow-hidden">
             <motion.img
-              src={imgSrc}
+              src={`https://server-hule.onrender.com/images/wallpaper_roll/WP_${parseInt(
+                product.skuId
+              )}/1-${parseInt(product.skuId)}-WP.jpg`}
               alt={product.name}
               className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
               whileHover={{ scale: 1.12 }}
@@ -167,20 +185,32 @@ const WallRollCard: React.FC<WallRollCardProps> = ({ product }) => {
               onClick={handleWishlistToggle}
               disabled={isLoadingWishlist}
               className={`absolute top-4 right-4 p-2 rounded-full transition-all ${
-                isWishlisted 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white'
-              } ${isLoadingWishlist ? 'opacity-50 cursor-not-allowed' : ''}`}
+                isWishlisted
+                  ? "bg-red-500 text-white"
+                  : "bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white"
+              } ${isLoadingWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+              <Heart
+                className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`}
+              />
             </motion.button>
           </div>
           <div className="p-4 flex flex-col flex-grow">
-            <h3 className="font-bold text-[#172b9b] mb-2 line-clamp-2 flex-grow">{product.name}</h3>
+            <h3 className="font-bold text-[#172b9b] mb-2 line-clamp-2 flex-grow">
+              {product.name}
+            </h3>
             {/* MODIFIED: Dynamic pricing display */}
             <div className="flex items-baseline gap-2 mt-2">
-              {displayPrice && <p className="font-bold text-lg text-[#1428a0]">{displayPrice}</p>}
-              {displayOriginalPrice && <p className="font-semibold text-sm text-gray-400 line-through">{displayOriginalPrice}</p>}
+              {displayPrice && (
+                <p className="font-bold text-lg text-[#1428a0]">
+                  {displayPrice}
+                </p>
+              )}
+              {displayOriginalPrice && (
+                <p className="font-semibold text-sm text-gray-400 line-through">
+                  {displayOriginalPrice}
+                </p>
+              )}
             </div>
           </div>
         </Link>

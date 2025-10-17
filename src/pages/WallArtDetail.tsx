@@ -162,31 +162,34 @@ const WallArtDetail: React.FC = () => {
   const [showQuestionMark, setShowQuestionMark] = useState(false);
   const [openFaqs, setOpenFaqs] = useState<{ [key: number]: boolean }>({});
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
- // ... previous code
-const [selectedColor, setSelectedColor] = useState(
-  wallArt?.colors?.[0]?.[0] ?? "W"
-);
-// Fix: Use optional chaining (?.) to prevent access if wallArt or skuId is null/undefined
-const skuShort = wallArt?.skuId?.slice(-3);
+  
+  // ... previous code
+  const [selectedColor, setSelectedColor] = useState(
+    wallArt?.colors?.[0]?.[0] ?? "W"
+  );
+  // Fix: Use optional chaining (?.) to prevent access if wallArt or skuId is null/undefined
+  const skuShort = wallArt?.skuId?.slice(-3);
 
-{/*............................... */}
-//... rest of the component............................ */}
-//... inside the WallArtDetail component
-
-const handleColorChange = (colorCode: string) => {
-  // Only update if a new color is selected to avoid unnecessary re-renders
-  if (colorCode !== selectedColor) {
-    setImgLoading(true);
-    setImgError(false);
-    setSelectedColor(colorCode);
+  {
+    /*............................... */
   }
-};
+  //... rest of the component............................ */}
+  //... inside the WallArtDetail component
 
+  const handleColorChange = (colorCode: string) => {
+    // Only update if a new color is selected to avoid unnecessary re-renders
+    if (colorCode !== selectedColor) {
+      setImgLoading(true);
+      setImgError(false);
+      setSelectedColor(colorCode);
+    }
+  };
 
-// ... rest of the code
+  // ... rest of the code
 
-{/*............................... */}
-
+  {
+    /*............................... */
+  }
 
   const [imgLoading, setImgLoading] = useState(true);
   const [imgError, setImgError] = useState(false);
@@ -475,6 +478,8 @@ const handleColorChange = (colorCode: string) => {
   // const skuShort = wallArt.skuId.slice(-3);
   const skuNum = parseInt(skuShort, 10);
 
+  const selectedColorName = wallArt.colors.find(c => c[0] === selectedColor) || wallArt.colors[0];
+
   const imgSrc = `${API_BASE_URL}/images/wall_art/WA_${skuShort}/${skuNum}.1_${selectedColor}_WA.png`;
   return (
     <>
@@ -628,8 +633,11 @@ const handleColorChange = (colorCode: string) => {
               {hasPredefinedSizes ? (
                 <div className="mb-6">
                   <label className="block text-sm font-bold text-[#172b9b] mb-2">
-                    Size
-                  </label>
+                Size: 
+                <span className="text-gray-700 font-medium ml-2">
+                  {currentVariant.size[selectedSizeIndex]}
+                </span>
+                </label>
                   <div className="flex gap-3 flex-wrap">
                     {currentVariant.size.map((size, index) => (
                       <button
@@ -734,39 +742,63 @@ const handleColorChange = (colorCode: string) => {
                 </>
               )}
 
-              {/* Color div*/}
-              {/* <div className="flex justify-start gap-2 ">
-                {wallArt.colors.map((color) => {
-                  return (
-                    <button className="text-lg block font-bold text-[#172b9b] mb-2 w-20 px-2 py-1 border-2 border-[#172b9b] rounded-md font-lora ">
-                      {color}
-                    </button>
-                  );
-                })}
-              </div> */}
-            
-<div className="flex justify-start gap-2 mt-4">
-  {wallArt.colors.map((color) => {
-    const firstLetter = color[0]; 
-    const isSelected = firstLetter === selectedColor;
+             {/*color div*/}
 
-    return (
-      <button
-        key={color}
-        // --- THIS IS THE LINE TO CHANGE ---
-        onClick={() => handleColorChange(firstLetter)}
-        className={`text-lg block font-bold mb-2 w-20 px-2 py-1 border-2 rounded-md font-lora 
+              {/* <div className="flex justify-start gap-2 mt-4">
+                {wallArt.colors.map((color) => {
+                  const firstLetter = color[0];
+                  const isSelected = firstLetter === selectedColor;
+
+                  return (
+                    <button
+                      key={color}
+                      // --- THIS IS THE LINE TO CHANGE ---
+                      onClick={() => handleColorChange(firstLetter)}
+                      className={`text-lg block font-bold mb-2 w-20 px-2 py-1 border-2 rounded-md font-lora 
           ${
             isSelected
               ? "bg-[#172b9b] text-white border-[#172b9b]"
               : "text-[#172b9b] border-[#172b9b]"
           }`}
-      >
-        {color}
-      </button>
-    );
-  })}
-</div>
+                    >
+                      {color}
+                    </button>
+                  );
+                })}
+              </div> */}
+
+{/* --- Color Section --- */}
+          <label className="block text-sm font-bold text-[#172b9b] mb-2 mt-4">
+            Color:
+            <span className="text-gray-700 font-medium ml-2">
+              {selectedColorName}
+            </span>
+          </label>
+          
+          <div className="flex justify-start gap-2">
+            {wallArt.colors.map((color) => {
+              const firstLetter = color[0]; 
+              const isSelected = firstLetter === selectedColor;
+
+              return (
+                <button
+                  key={color}
+                  onClick={() => handleColorChange(firstLetter)}
+                  className={`text-lg block font-bold mb-2 w-20 px-2 py-1 border-2 rounded-md font-lora 
+                    ${
+                      isSelected
+                        ? "bg-[#172b9b] text-white border-[#172b9b]"
+                        : "text-[#172b9b] border-[#172b9b]"
+                    }`}
+                >
+                  {color}
+                </button>
+              );
+            })}
+          </div>
+          {/* --- End of Color Section --- */}
+
+
 
               <div className="mb-6">
                 <span className="text-medium text-gray-700 font-bold">

@@ -207,6 +207,30 @@ const Products: React.FC = () => {
     return counts;
   }, [filteredProducts]);
 
+
+  // --- ADD THIS LOGIC ---
+  const isFilterActive = useMemo(() => {
+   const isFiltersDefault =
+      filters.category === 'All' &&
+      filters.priceRange[0] === 0 &&
+      filters.priceRange[1] === 200 &&
+      filters.colors.length === 0 &&
+      filters.roomTypes.length === 0;
+
+    const areOtherStatesDefault =
+      selectedThemes.length === 0 &&
+      sidebarSearch.trim() === '' &&
+      searchTerm.trim() === '' &&
+      selectedCategory === 'all';
+
+    // If both are default, filters are not active.
+    // If *either* is NOT default, filters ARE active.
+    return !isFiltersDefault || !areOtherStatesDefault;
+
+  }, [filters, selectedThemes, sidebarSearch, searchTerm, selectedCategory]);
+  // --- END OF ADDED LOGIC ---
+
+
   const productsToShow = filteredProducts;
 
   const totalPages = Math.ceil(productsToShow.length / PRODUCTS_PER_PAGE);
@@ -259,9 +283,9 @@ const Products: React.FC = () => {
               </p>
             </motion.div>
             <nav className="flex items-center space-x-2 text-sm text-gray-500 mt-6">
-              <a href="/" className="hover:text-primary-600 italic">Home</a>
+              <a href="/" className="hover:text-primary-600 italic hover:underline">Home</a>
               <span>/</span>
-              <span className="text-[#172b9b] italic">Premium Wallpapers</span>
+              <span className="text-[#172b9b] italic">Customised Wallpapers</span>
             </nav>
           </div>
         </div>
@@ -296,7 +320,7 @@ const Products: React.FC = () => {
           </div>
         )}
         
-        <div className="max-w-xl mx-auto px-4 sm:px-2 lg:px-8 py-4">
+{/*         <div className="max-w-xl mx-auto px-4 sm:px-2 lg:px-8 py-4">
           <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 w-full">
             <div className={`text-center cursor-pointer transition-all duration-200 hover:scale-105 flex-1 min-w-[180px] max-w-xs`} style={{ flexBasis: '220px' }} onClick={() => setSelectedCategory('customised')}>
               <div className={`w-full aspect-square max-w-[100px] rounded-full border-2 bg-white mb-4 mx-auto flex items-center justify-center transition-all duration-200 ${selectedCategory === 'customised' ? 'border-[#172b9b] shadow-lg' : 'border-gray-300 hover:border-gray-400'}`}>
@@ -311,34 +335,41 @@ const Products: React.FC = () => {
               <h3 className={`font-bold underline transition-colors duration-200 break-words ${selectedCategory === 'rolls' ? 'text-[#172b9b]' : 'text-[#172b9b]'}`}>Wallpaper Rolls</h3>
             </div>
           </div> 
-        </div>
+        </div> */}
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="hidden lg:block lg:w-64 flex-shrink-0">
               <div className="bg-white p-6 sticky top-24 rounded-xl border border-gray-200 shadow-lg max-h-[70vh] overflow-y-auto">
                 <div className="text-gray-400 text-sm mb-4 font-lora">{productsToShow.length} Results found</div>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-[#172b9b] font-bold">Filters</h2>
-                  <button
-                    onClick={() => {
-                      setFilters({
-                        category: 'All',
-                        priceRange: [0, 200],
-                        colors: [],
-                        roomTypes: []
-                      });
-                     
-                      setSelectedThemes([]);
-                      setSidebarSearch('');
-                      setSearchTerm('');
-                      setSelectedCategory('all');
-                    }}
-                    className="text-xs text-gray-500 hover:text-gray-700 font-lora"
-                  >
-                    Clear All
-                  </button>
-                </div>
+               {/* Find this existing code (around line 341) */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-[#172b9b] font-bold">Filters</h2>
+            
+            {/* --- MODIFY THIS SECTION --- */}
+            {isFilterActive && (
+              <button
+                onClick={() => {
+                  setFilters({
+                    category: 'All',
+                    priceRange: [0, 200],
+                    colors: [],
+                    roomTypes: []
+                  });
+                  
+                  setSelectedThemes([]);
+                  setSidebarSearch('');
+                  setSearchTerm('');
+                  setSelectedCategory('all');
+                }}
+                className="text-s text-gray-500 hover:text-gray-700 font-lora"
+              >
+                Clear filter
+              </button>
+            )}
+            {/* --- END OF MODIFICATION --- */}
+
+          </div>
 
                 <div className="space-y-0">
                   <div className="border-b border-gray-200 py-4">

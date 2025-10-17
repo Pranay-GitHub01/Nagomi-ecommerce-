@@ -499,10 +499,12 @@ export default function Home() {
                     </div>
                     <Link
                       to={
-                        cat.name === "Signature Art"? "/wallart": cat.name === "Customised Wallpapers"
-? "/wallpapers"
+                        cat.name === "Signature Art"
+                          ? "/wallart"
+                          : cat.name === "Customised Wallpapers"
+                          ? "/wallpapers"
                           : cat.name === "Wallpaper Rolls"
-                          ? "/wallpaperroll"
+                          ? "/wallroll"
                           : `/wallpapers?category=${encodeURIComponent(
                               cat.name
                             )}` // Default fallback

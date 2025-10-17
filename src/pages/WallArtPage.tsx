@@ -1438,7 +1438,7 @@ useEffect(() => {
                                 <span>Premium Wall Art</span>
                             </nav>
                             <h1 className="text-4xl md:text-5xl font-bold text-[#172b9b] mb-4 font-seasons">
-                                Premium Wall Art
+                                Signature Wall Art
                             </h1>
                             <p className="text-xl text-gray-600 max-w-4xl mx-auto italic font-bold font-lora">
                                 Transform every wall into a masterpiece with our aesthetically curated wall art collection
