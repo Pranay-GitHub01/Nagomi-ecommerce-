@@ -4,12 +4,12 @@ import { LayoutDashboard, ShoppingCart, BarChart2, Layers, Image, Users, Setting
 
 const adminNav = [
   { name: 'Dashboard', to: '/admin', icon: LayoutDashboard },
-  { name: 'Abandoned Carts', to: '/admin/abandoned-carts', icon: ShoppingCart },
-  { name: 'Product Insights', to: '/admin/insights', icon: BarChart2 },
-  { name: 'Arrange Products', to: '/admin/arrange', icon: Layers },
-  { name: 'Media Management', to: '/admin/media', icon: Image },
-  { name: 'User Access', to: '/admin/access', icon: Users },
-  { name: 'Analytics', to: '/admin/analytics', icon: Settings },
+  // { name: 'Abandoned Carts', to: '/admin/abandoned-carts', icon: ShoppingCart },
+  // { name: 'Product Insights', to: '/admin/insights', icon: BarChart2 },
+  // { name: 'Arrange Products', to: '/admin/arrange', icon: Layers },
+  { name: 'Upload image', to: '/admin/uploadimg', icon: Image },
+  // { name: 'User Access', to: '/admin/access', icon: Users },
+  // { name: 'Analytics', to: '/admin/analytics', icon: Settings },
 ];
 
 const AdminLayout: React.FC = () => {

@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+// src/components/Product/ProductCard.tsx
 
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
+import { Heart, Loader2, ImageOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Product } from '../../types';
-import { useWishlistStore } from '../../stores/useWishlistStore';
-import { useAuthStore } from '../../stores/useAuthStore';
+import { Product } from '../../types'; // Adjust path as needed
+import { useWishlistStore } from '../../stores/useWishlistStore'; // Adjust path as needed
+import { useAuthStore } from '../../stores/useAuthStore'; // Adjust path as needed
+import { API_BASE_URL } from '../../api/config'; // Make sure this is imported and correct
 
 
 interface ProductCardProps {
-  product: Product;
+  // Accept the 'displayImageSrc' prop calculated by Products.tsx
+  product: Product & { displayImageSrc?: string };
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
@@ -17,382 +20,246 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { user } = useAuthStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isLoadingWishlist, setIsLoadingWishlist] = useState(false);
-  // Simple toast for unauthenticated wishlist
   const [showWishlistToast, setShowWishlistToast] = useState(false);
 
-  // Check wishlist status on mount
+  // --- State for Image Loading & Error ---
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [imageLoadError, setImageLoadError] = useState(false);
+
+  // --- Construct the FULL image source URL ---
+  const relativeImgSrc = product.displayImageSrc;
+  let finalImgSrc = '/placeholder.jpg'; // Default placeholder
+
+  if (relativeImgSrc) {
+    if (relativeImgSrc.startsWith('http')) {
+      // If displayImageSrc is already an absolute URL, use it directly
+      finalImgSrc = relativeImgSrc;
+    } else if (relativeImgSrc.startsWith('/')) {
+      // If it's a root-relative path (like /images/...), prepend API_BASE_URL
+      // Ensure no double slashes if API_BASE_URL ends with / and relativeImgSrc starts with /
+      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      finalImgSrc = `${baseUrl}${relativeImgSrc}`;
+    }
+     // Optional: Handle cases where relativeImgSrc might be just a filename
+     // else { finalImgSrc = `${API_BASE_URL}/${relativeImgSrc}`; }
+  }
+  // Uncomment for debugging:
+  // console.log(`Product: ${product.name}, Final Image Src: ${finalImgSrc}`);
+
+  // --- Simplified useEffect ---
+  // Reset loading/error state when the final URL changes.
+  useEffect(() => {
+    setIsImageLoading(true);
+    setImageLoadError(false);
+  }, [finalImgSrc]); // Dependency is now the fully constructed URL
+
+  // --- Image Load/Error Handlers ---
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+    setImageLoadError(false);
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error(`Image Error: Failed to load ${finalImgSrc}`, e); // Log the error and the URL
+    setIsImageLoading(false);
+    setImageLoadError(true);
+  };
+
+  // --- Effect to check Wishlist Status ---
   useEffect(() => {
     const checkStatus = async () => {
       const productId = product._id || product.id;
       if (!productId) return;
-      
-      if (user) {
+
+      if (user) { // Logged-in user
         setIsLoadingWishlist(true);
         try {
+          // Use the async check function from the store
           const status = await checkWishlistStatus(productId);
           setIsWishlisted(status);
         } catch (error) {
           console.error('Error checking wishlist status:', error);
+          // Optionally fallback to local check or set false
+          setIsWishlisted(isInWishlist(productId));
         } finally {
           setIsLoadingWishlist(false);
         }
-      } else {
-        // For non-logged in users, check local state
+      } else { // Guest user
         setIsWishlisted(isInWishlist(productId));
+        setIsLoadingWishlist(false); // Ensure loading stops for guests
       }
-    };
-
+     };
     checkStatus();
   }, [user, product._id, product.id, checkWishlistStatus, isInWishlist]);
 
+
+  // --- Wishlist Toggle Handler ---
   const handleWishlistToggle = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+      e.preventDefault(); // Prevent link navigation
+    e.stopPropagation(); // Stop event bubbling
     const productId = product._id || product.id;
     if (!productId) return;
 
     setIsLoadingWishlist(true);
+
+    // Guest User Logic (using local storage via Zustand)
     if (!user) {
-      // Unauthenticated: use localStorage wishlist
-      if (!isWishlisted) {
-        setIsWishlisted(true); // Optimistic update
-        await addToWishlist(product);
+      if (isWishlisted) {
+        await removeFromWishlist(productId); // Assumes store handles localStorage
+        setIsWishlisted(false);
+      } else {
+        await addToWishlist(product); // Assumes store handles localStorage
+        setIsWishlisted(true);
+        // Optional: Show toast for guests
         setShowWishlistToast(true);
         setTimeout(() => setShowWishlistToast(false), 2000);
-      } else {
-        setIsWishlisted(false); // Optimistic update
-        await removeFromWishlist(productId);
       }
       setIsLoadingWishlist(false);
       return;
     }
-    // Authenticated: use API
-    if (isWishlisted) {
-      setIsWishlisted(false); // Optimistic update
-      removeFromWishlist(productId).catch((error) => {
-        setIsWishlisted(true); // Revert if error
-        console.error('Error removing from wishlist:', error);
-      }).finally(() => setIsLoadingWishlist(false));
-    } else {
-      setIsWishlisted(true); // Optimistic update
-      addToWishlist(product).catch((error) => {
-        setIsWishlisted(false); // Revert if error
-        console.error('Error adding to wishlist:', error);
-      }).finally(() => setIsLoadingWishlist(false));
-    }
-  };
 
-  // Image source with local /images fallbacks based on SKU and provided image paths
-  const candidates: string[] = (() => {
-    const urls: string[] = [];
-    // If product provides images, normalize first one
-    if (Array.isArray(product.images) && product.images.length > 0) {
-      const raw = product.images[0] || '';
-      if (raw) {
-        if (raw.startsWith('http://') || raw.startsWith('https://')) urls.push(raw);
-        else if (raw.startsWith('@images/')) urls.push(`/images/${raw.substring('@images/'.length)}`);
-        else if (raw.startsWith('images/')) urls.push(`/images/${raw.substring('images/'.length)}`);
-        else if (raw.startsWith('/images/')) urls.push(raw);
-        else if (raw.startsWith('@uploads/')) urls.push(`/uploads/${raw.substring('@uploads/'.length)}`);
-        else if (raw.startsWith('uploads/')) urls.push(`/uploads/${raw.substring('uploads/'.length)}`);
-        else if (raw.startsWith('/uploads/')) urls.push(raw);
-        else if (raw.startsWith('/')) urls.push(raw);
-        else urls.push(`/images/${raw.split('/').pop() || raw}`);
+    // Logged-in User Logic (using API via Zustand actions)
+    try {
+      if (isWishlisted) {
+        await removeFromWishlist(productId); // Store action calls API
+        setIsWishlisted(false);
+      } else {
+        await addToWishlist(product); // Store action calls API
+        setIsWishlisted(true);
       }
+    } catch (error) {
+      console.error("Failed to toggle wishlist via API:", error);
+      // Optional: Revert UI state or show error to user
+      // setIsWishlisted(!isWishlisted); // Revert optimistic update on failure
+    } finally {
+      setIsLoadingWishlist(false);
     }
-    const sku = (product as any).skuId || (product as any).sku || (product as any).SKU || (product as any).sku_id;
-    if (sku) {
-      const base = String(sku).replace(/-WP$/i, '');
-      const raw = String(sku);
-      ['webp', 'jpg', 'jpeg', 'png'].forEach(ext => urls.push(`/images/${raw}.${ext}`));
-      ['webp', 'jpg', 'jpeg', 'png'].forEach(ext => urls.push(`/images/${base}.${ext}`));
-      ['webp', 'jpg', 'jpeg', 'png'].forEach(ext => urls.push(`/images/${base}-WP.${ext}`));
-      for (let i = 1; i <= 6; i++) {
-        ['webp', 'jpg', 'jpeg', 'png'].forEach(ext => urls.push(`/images/${i}-${base}-WP.${ext}`));
-      }
-      for (let i = 1; i <= 6; i++) {
-        ['webp', 'jpg', 'jpeg', 'png'].forEach(ext => urls.push(`/images/${base}-${i}.${ext}`));
-      }
-    }
-    urls.push('/placeholder.jpg');
-    return urls;
-  })();
+   };
 
-  const [imgSrc, setImgSrc] = useState<string>(candidates[0]);
-  const [candidateIndex, setCandidateIndex] = useState(0);
+  // Determine price display
+  const displayPrice = product.price ?? 0;
+  const displayOriginalPrice = product.originalPrice ?? 0;
+  const hasOriginalPrice = displayOriginalPrice > 0 && displayOriginalPrice > displayPrice;
 
-  useEffect(() => {
-    setImgSrc(candidates[0]);
-    setCandidateIndex(0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product._id, product.id]);
-
-  const handleImgError = () => {
-    const nextIndex = candidateIndex + 1;
-    if (nextIndex < candidates.length) {
-      setCandidateIndex(nextIndex);
-      setImgSrc(candidates[nextIndex]);
-    }
-  };
-
-  // Debug log
-  // console.log('ProductCard:', product.name, imgSrc);
-
-
+  // Determine link target (Example - Adjust as needed)
+  // const detailLink = `/product/${product._id || product.id}`;
 
   return (
     <>
+<Link to={ `/${product.category}/${product._id || product.id}` }>
+      {/* Optional Toast */}
+      
+      
+     
       {showWishlistToast && (
         <div className="fixed top-6 right-6 z-[100] bg-green-500 text-white px-4 py-2 rounded shadow-lg animate-fade-in">
           Added to wishlist!
         </div>
       )}
+
+      {/* Main Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.1 }}
-        whileHover={{ y: -8, scale: 1.03 }}
-        className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-100"
+        transition={{ duration: 0.2 }}
+        whileHover={{ y: -6, scale: 1.02 }}
+        className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-150 h-full flex flex-col border border-gray-100"
       >
-        <Link to={`/wallpapers/${product._id || product.id}`} className="block">
-          <div className="relative overflow-hidden">
+        {/* Link Wrapper (Uncomment and adjust 'to' prop if needed) */}
+        {/* <Link to={detailLink} className="block flex flex-col h-full"> */}
+
+          {/* Image Container */}
+          <div className="relative overflow-hidden w-full h-64 bg-gray-100">
+
+            {/* 1. Loader: Show only while loading AND no error */}
+            {isImageLoading && !imageLoadError && (
+              <div className="absolute inset-0 flex items-center justify-center z-0">
+                <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+              </div>
+            )}
+
+            {/* 2. Error Placeholder: Show if error occurred (and not loading) */}
+            {imageLoadError && !isImageLoading && (
+               <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-4 text-center z-0">
+                 <ImageOff className="w-10 h-10 mb-2" />
+                 <span className="text-xs">Image unavailable</span>
+               </div>
+            )}
+
+            {/* 3. Image --- USES finalImgSrc --- */}
             <motion.img
-              src={imgSrc}
-              alt={product.name}
-              className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-              whileHover={{ scale: 1.12 }}
-              onError={handleImgError}
+              key={finalImgSrc} // Use the full URL as key
+              src={finalImgSrc} // Use the full URL as src
+              alt={product.name || 'Product Image'}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:scale-105 ${
+                !isImageLoading && !imageLoadError ? 'opacity-100' : 'opacity-0'
+              }`}
+              onLoad={handleImageLoad}
+              onError={handleImageError} // Added error logging here
+              loading="lazy"
             />
+
             {/* Badges */}
-            <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+            <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
               {product.bestseller && (
-                <span className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg border border-yellow-600 animate-pulse">
+                <span className="bg-yellow-400 text-yellow-900 px-2.5 py-0.5 rounded-full text-xs font-semibold shadow">
                   Bestseller
                 </span>
               )}
-              {product.originalPrice && (
-                <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+              {hasOriginalPrice && (
+                <span className="bg-red-500 text-white px-2.5 py-0.5 rounded-full text-xs font-semibold shadow">
                   Sale
                 </span>
               )}
             </div>
+
             {/* Wishlist Button */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleWishlistToggle}
               disabled={isLoadingWishlist}
-              className={`absolute top-4 right-4 p-2 rounded-full transition-all ${
-                isWishlisted 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white'
+              className={`absolute top-3 right-3 p-2 rounded-full transition-all z-10 ${
+                isWishlisted
+                  ? 'bg-red-500 text-white hover:bg-red-600'
+                  : 'bg-white/70 backdrop-blur-sm text-gray-500 hover:bg-white hover:text-red-500'
               } ${isLoadingWishlist ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
-              <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+               {isLoadingWishlist ? (
+                  <Loader2 className="w-5 h-5 animate-spin"/>
+               ) : (
+                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+               )}
             </motion.button>
           </div>
-          <div className="p-4">
-            <h3 className="font-bold text-[#172b9b] mb-2 line-clamp-2">{product.name}</h3>
-            <p className="font-bold italic text-[#545454]">
-              <span className="font-bold italic text-[#545454] line-through">₹119</span> ₹99 per square feet
-            </p>
+
+          {/* Card Content */}
+          <div className="p-4 flex flex-col flex-grow">
+            <h3 className="font-semibold text-base text-[#172b9b] mb-2 line-clamp-2 flex-grow">
+              {product.name || 'Untitled Product'}
+            </h3>
+            <div className="mt-auto pt-1 flex items-baseline justify-between gap-2">
+              <p className="font-bold text-[#1428a0] text-lg">
+                 ₹{displayPrice.toLocaleString('en-IN')}
+                 {(product.category?.toLowerCase() === 'wallpaper' || product.category?.toLowerCase() === 'wall-art') && (
+                    <span className="text-xs font-normal text-gray-500"> / sq ft</span>
+                 )}
+              </p>
+              {hasOriginalPrice && (
+                  <span className="text-sm text-gray-400 line-through">
+                      ₹{displayOriginalPrice.toLocaleString('en-IN')}
+                  </span>
+              )}
+            </div>
           </div>
-        </Link>
+
+        {/* Closing Link Wrapper (if used) */}
+        {/* </Link> */}
       </motion.div>
+       </Link>
     </>
   );
 };
 
 export default ProductCard;
-
-
-
-// import React, { useState, useEffect } from 'react';
-// import { motion } from 'framer-motion';
-// import { Heart } from 'lucide-react';
-// import { Link } from 'react-router-dom';
-// import { Product } from '../../types';
-// import { useWishlistStore } from '../../stores/useWishlistStore';
-// import { useAuthStore } from '../../stores/useAuthStore';
-
-// interface ProductCardProps {
-//   product: Product;
-//   showBadge?: boolean; // Prop from redesigns is now included and optional
-// }
-
-// const ProductCard: React.FC<ProductCardProps> = ({ product, showBadge }) => {
-//   const { addToWishlist, removeFromWishlist, isInWishlist, checkWishlistStatus } = useWishlistStore();
-//   const { user } = useAuthStore();
-//   const [isWishlisted, setIsWishlisted] = useState(false);
-//   const [isLoadingWishlist, setIsLoadingWishlist] = useState(false);
-//   const [showWishlistToast, setShowWishlistToast] = useState(false);
-
-//   // Check wishlist status on mount
-//   useEffect(() => {
-//     const checkStatus = async () => {
-//       const productId = product._id || product.id;
-//       if (!productId) return;
-      
-//       if (user) {
-//         setIsLoadingWishlist(true);
-//         try {
-//           const status = await checkWishlistStatus(productId);
-//           setIsWishlisted(status);
-//         } catch (error) {
-//           console.error('Error checking wishlist status:', error);
-//         } finally {
-//           setIsLoadingWishlist(false);
-//         }
-//       } else {
-//         setIsWishlisted(isInWishlist(productId));
-//       }
-//     };
-
-//     checkStatus();
-//   }, [user, product._id, product.id, checkWishlistStatus, isInWishlist]);
-
-//   const handleWishlistToggle = async (e: React.MouseEvent) => {
-//     e.preventDefault();
-//     e.stopPropagation();
-//     const productId = product._id || product.id;
-//     if (!productId) return;
-
-//     setIsLoadingWishlist(true);
-//     if (!user) {
-//       if (!isWishlisted) {
-//         setIsWishlisted(true);
-//         await addToWishlist(product);
-//         setShowWishlistToast(true);
-//         setTimeout(() => setShowWishlistToast(false), 3000);
-//       } else {
-//         setIsWishlisted(false);
-//         await removeFromWishlist(productId);
-//       }
-//       setIsLoadingWishlist(false);
-//       return;
-//     }
-
-//     if (isWishlisted) {
-//       setIsWishlisted(false);
-//       removeFromWishlist(productId).catch(() => setIsWishlisted(true))
-//         .finally(() => setIsLoadingWishlist(false));
-//     } else {
-//       setIsWishlisted(true);
-//       addToWishlist(product).catch(() => setIsWishlisted(false))
-//         .finally(() => setIsLoadingWishlist(false));
-//     }
-//   };
-
-//   // Complex image fallback logic from your file is preserved
-//   const candidates: string[] = (() => {
-//     const urls: string[] = [];
-//     if (Array.isArray(product.images) && product.images.length > 0) {
-//       const raw = product.images[0] || '';
-//       if (raw) {
-//         if (raw.startsWith('http')) urls.push(raw);
-//         else urls.push(`/images/${raw.split('/').pop() || raw}`);
-//       }
-//     }
-//     const sku = (product as any).skuId;
-//     if (sku) {
-//       const base = String(sku).replace(/-WP$/i, '');
-//       ['webp', 'jpg', 'jpeg', 'png'].forEach(ext => urls.push(`/images/${sku}.${ext}`));
-//       ['webp', 'jpg', 'jpeg', 'png'].forEach(ext => urls.push(`/images/${base}.${ext}`));
-//     }
-//     urls.push('/placeholder.jpg');
-//     return Array.from(new Set(urls)); // Ensure unique candidates
-//   })();
-
-//   const [imgSrc, setImgSrc] = useState<string>(candidates[0]);
-//   const [candidateIndex, setCandidateIndex] = useState(0);
-
-//   useEffect(() => {
-//     setImgSrc(candidates[0]);
-//     setCandidateIndex(0);
-//   // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [product._id, product.id]);
-
-//   const handleImgError = () => {
-//     const nextIndex = candidateIndex + 1;
-//     if (nextIndex < candidates.length) {
-//       setCandidateIndex(nextIndex);
-//       setImgSrc(candidates[nextIndex]);
-//     }
-//   };
-
-//   // MERGED LOGIC: Prioritize `showBadge` prop, but fall back to `product.bestseller`
-//   const shouldDisplayBestseller = typeof showBadge === 'boolean' ? showBadge : product.bestseller;
-
-//   return (
-//     <>
-//       {showWishlistToast && (
-//         <div className="fixed top-20 right-6 z-[100] bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in-out">
-//           Added to wishlist!
-//         </div>
-//       )}
-//       <motion.div
-//         layout
-//         whileHover={{ y: -8 }}
-//         className="group bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col hover:shadow-2xl transition-all duration-300 border border-blue-100"
-//       >
-//         <Link to={`/wallpapers/${product._id || product.id}`} className="block h-full flex flex-col">
-//           <div className="relative overflow-hidden">
-//             <motion.img
-//               src={imgSrc}
-//               alt={product.name}
-//               className="w-full h-56 object-cover"
-//               onError={handleImgError}
-//               transition={{ duration: 0.5 }}
-//               initial={false}
-//             />
-//             <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-
-//             <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
-//               {shouldDisplayBestseller && (
-//                 <span className="bg-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-//                   Bestseller
-//                 </span>
-//               )}
-//               {product.originalPrice && (
-//                 <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
-//                   Sale
-//                 </span>
-//               )}
-//             </div>
-            
-//             <motion.button
-//               whileHover={{ scale: 1.1 }}
-//               whileTap={{ scale: 0.9 }}
-//               onClick={handleWishlistToggle}
-//               disabled={isLoadingWishlist}
-//               className={`absolute top-3 right-3 p-2 rounded-full transition-all ${
-//                 isWishlisted 
-//                   ? 'bg-blue-600 text-white' 
-//                   : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white'
-//               } ${isLoadingWishlist ? 'opacity-50 cursor-not-allowed' : ''}`}
-//               aria-label="Toggle Wishlist"
-//             >
-//               <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
-//             </motion.button>
-//           </div>
-//           <div className="p-4 flex flex-col flex-grow">
-//             <h3 className="font-bold text-[#172b9b] text-base font-seasons line-clamp-2 flex-grow">
-//               {product.name}
-//             </h3>
-//             <div className="mt-4 flex items-baseline justify-between">
-//               <p className="font-bold text-[#1428a0] text-lg">
-//                 ₹{product.price}
-//                 <span className="text-sm font-normal text-gray-500"> / sq ft</span>
-//               </p>
-//               {product.originalPrice && (
-//                   <span className="text-sm text-gray-400 line-through">₹{product.originalPrice}</span>
-//               )}
-//             </div>
-//           </div>
-//         </Link>
-//       </motion.div>
-//     </>
-//   );
-// };
-
-// export default ProductCard;

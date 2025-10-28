@@ -8,7 +8,8 @@ import Layout from "./components/Layout/Layout";
 import AdminLayout from "./components/Layout/AdminLayout";
 import RequireAdmin from "./components/Layout/RequireAdmin";
 import WallRollDetail from "./pages/WallRollDetail";
-
+import UploadProductImagePage from "./pages/Admin/UploadProductImagePage";
+import { Upload } from "lucide-react";
 // Lazy load all page-level components
 const Home = lazy(() => import("./pages/Home"));
 const Products = lazy(() => import("./pages/Products"));
@@ -75,9 +76,9 @@ function App() {
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="wallpapers" element={<Products />} />
-              <Route path="wallpapers/:id" element={<ProductDetail />} />
+              <Route path="Wallpaper/:id" element={<ProductDetail />} />
               <Route path="wallart" element={<WallArtPage />} />
-              <Route path="wallart/:id" element={<WallArtDetail />} />
+              <Route path="wall-art/:id" element={<WallArtDetail />} />
               <Route path="checkout" element={<Checkout />} />
               <Route path="custom-design" element={<CustomDesign />} />
               <Route path="about" element={<About />} />
@@ -88,7 +89,7 @@ function App() {
               <Route path="bestsellers" element={<Bestsellers />} />
               <Route path="*" element={<NotFound />} />
               <Route path="wallroll" element={<WallRoll />}/>
-              <Route path="wallroll/:id" element={<WallRollDetail />}/>
+              <Route path="Wallpaper-Roll/:id" element={<WallRollDetail />}/>
             </Route>
 
             {/* Standalone pages (no main layout) */}
@@ -112,7 +113,7 @@ function App() {
               <Route path="abandoned-carts" element={<AbandonedCarts />} />
               <Route path="insights" element={<ProductInsights />} />
               <Route path="arrange" element={<ProductArrangement />} />
-              <Route path="media" element={<MediaManagement />} />
+              <Route path="uploadimg" element={<UploadProductImagePage />} />
               <Route path="access" element={<UserAccessControl />} />
               <Route path="analytics" element={<AnalyticsDashboard />} />
               <Route path="products/add" element={<AddProduct />} />

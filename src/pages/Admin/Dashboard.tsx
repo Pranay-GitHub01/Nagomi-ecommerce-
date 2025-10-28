@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+// Dashboard.tsx (Restructured for Scrolling)
+
+import React, { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   Package,
   ShoppingCart,
@@ -7,19 +9,68 @@ import {
   TrendingUp,
   Plus,
   Edit,
-  Trash2,
-  Eye,
-  Search,
-  Filter,
-  Download,
-  Calendar,
-  DollarSign,
-} from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
-import { adminAPI } from '../../api/admin';
-import { Product } from '../../types';
-import { Link } from 'react-router-dom';
+  Search, // Removed Trash2 and Eye
+} from "lucide-react";
+import { Helmet } from "react-helmet-async";
+import { adminAPI } from "../../api/admin"; // Assuming you have this
+import { Product } from "../../types"; // Your Product type definition
+import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../../api/config"; // Your API base URL config
 
+// --- UPDATED ProductThumbnail Component ---
+const ProductThumbnail: React.FC<{ product: Product; className?: string }> = ({ product, className = "w-10 h-10" }) => {
+  const [imgSrc, setImgSrc] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    let primarySrc = '/placeholder.jpg';
+
+    if (Array.isArray(product.images) && product.images.length > 0 && product.images[0]) {
+      const rawUrl = product.images[0];
+      if (rawUrl.startsWith('/')) {
+        primarySrc = `${API_BASE_URL}${rawUrl}`;
+      } else {
+        primarySrc = rawUrl;
+      }
+    }
+    setImgSrc(primarySrc);
+    if (primarySrc === '/placeholder.jpg') {
+        setIsLoading(false);
+    }
+  }, [product._id, product.images]);
+
+  const handleImgError = () => {
+    setImgSrc('/placeholder.jpg');
+    setIsLoading(false);
+  };
+
+  const handleImgLoad = () => {
+    setIsLoading(false);
+  };
+
+  return (
+    <div className={`${className} rounded-md flex-shrink-0 bg-gray-200 relative overflow-hidden`}>
+      {isLoading && imgSrc !== '/placeholder.jpg' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
+        </div>
+      )}
+      <img
+        key={imgSrc}
+        src={imgSrc}
+        alt={product.name || 'Product Image'}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        onError={handleImgError}
+        onLoad={handleImgLoad}
+        loading="lazy"
+      />
+    </div>
+  );
+};
+// --- END OF ProductThumbnail Component ---
+
+
+// --- Interfaces (assuming similar structure) ---
 interface DashboardStats {
   revenue: string;
   orderCount: number;
@@ -30,99 +81,119 @@ interface DashboardStats {
 interface Order {
   _id: string;
   orderId: string;
-  user: {
-    name: string;
-    email: string;
-  };
+  user: { name: string; email: string };
   total: number;
   status: string;
   createdAt: string;
-  items: Array<{
-    product: {
-      name: string;
-    };
-    quantity: number;
-    price: number;
-  }>;
+  items: Array<{ product: { name: string }; quantity: number; price: number }>;
 }
 
+// --- Main Dashboard Component ---
 const Dashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers'>('overview');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<"overview" | "products" | "orders" | "customers">("products"); // Default to products tab
+  const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // --- Data Fetching Effect (Keep as is) ---
   useEffect(() => {
     const fetchDashboardData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        setLoading(true);
-        const [statsData, ordersData, productsRes] = await Promise.all([
-          adminAPI.getDashboardStats(),
-          adminAPI.getRecentOrders(),
-          fetch('/api/products')
+        const results = await Promise.all([
+          adminAPI.getDashboardStats().catch(err => { console.error("Stats fetch error:", err); return null; }),
+          adminAPI.getRecentOrders().catch(err => { console.error("Orders fetch error:", err); return []; }),
+          fetch(`${API_BASE_URL}/api/products`).catch(err => { console.error("Products fetch error:", err); return null; }) // Fetch from public endpoint
         ]);
 
-        setStats(statsData);
-        setRecentOrders(ordersData);
+        const [statsData, ordersData, productsRes] = results;
 
-        if (productsRes.ok) {
-          const productsData = await productsRes.json();
-          setProducts(productsData);
+        setStats(statsData);
+        setRecentOrders(ordersData || []);
+
+        if (productsRes instanceof Response) {
+            if (productsRes.ok) {
+              const productData = await productsRes.json();
+              setProducts(Array.isArray(productData) ? productData : []);
+            } else {
+              throw new Error(`Failed to fetch products: ${productsRes.statusText}`);
+            }
+        } else if (productsRes === null) {
+             throw new Error("Failed to connect to the products API.");
         }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+         else {
+             throw new Error("Products fetch did not return a valid Response object");
+        }
+      } catch (err: any) {
+        console.error("Error fetching dashboard data:", err);
+        setError(err.message || "An unexpected error occurred while fetching data.");
+        setProducts([]);
+        setRecentOrders([]);
+        setStats(null);
       } finally {
         setLoading(false);
       }
     };
-
     fetchDashboardData();
   }, []);
 
-  const formatCurrency = (amount: number) => {
-    return `₹${amount.toFixed(2)}`;
+  // --- Helper Functions (Using Intl.NumberFormat) ---
+  const formatCurrency = (amount: number | null | undefined): string => {
+    if (typeof amount !== 'number') {
+      return 'N/A';
+    }
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN');
+    return new Date(dateString).toLocaleDateString("en-IN");
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
-      case 'processing':
-      case 'paid':
-        return 'bg-blue-100 text-blue-800';
-      case 'shipped':
-        return 'bg-purple-100 text-purple-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+   const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed": case "delivered": return "bg-green-100 text-green-800";
+      case "processing": case "paid": return "bg-blue-100 text-blue-800";
+      case "shipped": return "bg-purple-100 text-purple-800";
+      case "pending": return "bg-yellow-100 text-yellow-800";
+      case "cancelled": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // --- Filtering Logic (Keep as is) ---
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm) return products;
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return products.filter(
+      (product) =>
+        product.name?.toLowerCase().includes(lowerSearchTerm) ||
+        product.category?.toLowerCase().includes(lowerSearchTerm) ||
+        product.skuId?.toLowerCase().includes(lowerSearchTerm)
+    );
+  }, [products, searchTerm]);
 
-  const tabs = [
-    { id: 'overview', label: 'Overview', icon: TrendingUp },
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'orders', label: 'Orders', icon: ShoppingCart },
-    { id: 'customers', label: 'Customers', icon: Users },
+  // --- Tab Definitions (Keep as is) ---
+   const tabs = [
+    { id: "overview", label: "Overview", icon: TrendingUp },
+    { id: "products", label: "Products", icon: Package },
+    { id: "orders", label: "Orders", icon: ShoppingCart },
+    { id: "customers", label: "Customers", icon: Users },
   ];
 
+
+  // --- Render Loading/Error States ---
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-full h-full flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
@@ -131,407 +202,220 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  if (error) {
+     return (
+       <div className="w-full h-full bg-red-50 flex items-center justify-center p-4">
+         <div className="bg-white p-6 rounded-lg shadow-md text-center">
+           <h2 className="text-xl font-bold text-red-700 mb-2">Error Loading Data</h2>
+           <p className="text-gray-600">{error}</p>
+         </div>
+       </div>
+     );
+   }
+
+
+  // --- Main Render (Restructured) ---
   return (
     <>
       <Helmet>
-        <title>Admin Dashboard - Nagomi</title>
-        <meta name="description" content="Manage your wallpaper store with our comprehensive admin dashboard." />
+        <title>Admin Dashboard</title>
+        <meta name="description" content="Manage products, orders, and customers." />
       </Helmet>
 
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600">Manage your wallpaper store efficiently</p>
-          </div>
+      {/* NEW ROOT: Fills the h-screen <main> from AdminLayout */}
+      <div className="w-full h-full flex flex-col bg-gray-50">
 
-          {/* Navigation Tabs */}
-          <div className="bg-white rounded-xl shadow-lg mb-8">
-            <div className="flex space-x-8 p-6">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <tab.icon className="w-5 h-5" />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
+        {/* --- FIXED HEADER AREA --- */}
+        <div className="flex-shrink-0 border-b border-gray-200 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+              <p className="text-gray-600">Manage your store efficiently</p>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="bg-white rounded-xl shadow-lg">
+              <div className="flex space-x-8 p-6 overflow-x-auto">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? "bg-primary-100 text-primary-700 font-semibold"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <tab.icon className="w-5 h-5 flex-shrink-0" />
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
+        </div>
+        {/* --- END OF FIXED HEADER --- */}
 
-          {/* Overview Tab */}
-          {activeTab === 'overview' && (
-            <div className="space-y-8">
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats ? formatCurrency(parseFloat(stats.revenue)) : '₹0.00'}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                      <DollarSign className="w-6 h-6 text-green-600" />
-                    </div>
-                  </div>
-                </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats?.orderCount || 0}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <ShoppingCart className="w-6 h-6 text-blue-600" />
-                    </div>
-                  </div>
-                </motion.div>
+        {/* --- SCROLLING CONTENT AREA --- */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Products</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats?.productCount || 0}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Package className="w-6 h-6 text-purple-600" />
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Active Customers</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats?.customerCount || 0}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                      <Users className="w-6 h-6 text-orange-600" />
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Recent Orders */}
+            {/* --- Products Tab Content (Restructured) --- */}
+            {activeTab === "products" && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white rounded-xl shadow-lg"
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-xl shadow-lg overflow-hidden" // Added overflow-hidden
               >
-                <div className="p-6 border-b border-gray-200">
-                  <h2 className="text-xl font-semibold text-gray-900">Recent Orders</h2>
+                {/* Header and Search (Layout matches AdminProducts.tsx) */}
+                <div className="p-4 sm:p-6 border-b border-gray-200">
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Products
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {searchTerm
+                        ? `Showing ${filteredProducts.length} of ${products.length} total products`
+                        : `Total products: ${products.length}`
+                      }
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="relative w-full sm:w-auto sm:flex-grow max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Search by name, category, or SKU..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                      />
+                    </div>
+                    <Link
+                      to="/admin/products/add" // Make sure this route exists
+                      className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2 text-sm whitespace-nowrap w-full sm:w-auto justify-center"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Product</span>
+                    </Link>
+                  </div>
                 </div>
+
+                {/* Products Table (Padding updated) */}
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Order ID
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Customer
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Products
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Amount
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {recentOrders.map((order) => (
-                        <tr key={order._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {order.orderId}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div>
-                              <div className="font-medium">{order.user.name}</div>
-                              <div className="text-gray-500">{order.user.email}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {order.items.map(item => item.product.name).join(', ')}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {formatCurrency(order.total)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                              {order.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatDate(order.createdAt)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button className="text-primary-600 hover:text-primary-900">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </td>
+                  {filteredProducts.length > 0 ? (
+                    <table className="w-full min-w-[600px]">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Product
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Category
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Price
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            In Stock
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            SKU
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredProducts.map((product) => (
+                          <tr key={product._id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                {/* Using thumbnail with adjusted size */}
+                                <ProductThumbnail product={product} className="w-12 h-12" />
+                                <div className="ml-3 sm:ml-4">
+                                  <div className="text-sm font-medium text-gray-900 line-clamp-2 max-w-sm" title={product.name}>
+                                    {product.name || 'N/A'}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                              {product.category || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {formatCurrency(product.price)}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm">
+                              {/* Changed Yes/No to In Stock/Out of Stock */}
+                              <span className={`inline-flex px-2.5 py-0.5 text-xs font-semibold rounded-full ${
+                                product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {product.inStock ? 'In Stock' : 'Out of Stock'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                              {product.skuId || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <Link
+                                  to={`/admin/products/edit/${product._id}`}
+                                  className="text-primary-600 hover:text-primary-800 p-1 rounded hover:bg-primary-50 transition-colors"
+                                  title="Edit Product"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Link>
+                                {/* Delete button is removed here as per AdminProducts.tsx */}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="text-center py-10 px-4">
+                      <Package className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-gray-500">
+                        No products found{searchTerm ? ` matching "${searchTerm}"` : ''}.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
-            </div>
-          )}
+            )}
 
-          {/* Products Tab */}
-          {activeTab === 'products' && (
-            <div className="bg-white rounded-xl shadow-lg">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Products</h2>
-                  <Link
-                    to="/admin/products/add"
-                    className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add Product</span>
-                  </Link>
-                </div>
-                <div className="mt-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search products..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Product
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Price
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProducts.map((product) => (
-                      <tr key={product._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <img
-                              src={product.images?.[0] || '/placeholder.jpg'}
-                              alt={product.name}
-                              className="w-10 h-10 rounded-lg object-cover"
-                            />
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {product.category}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          ₹99 per sq ft
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <Link
-                              to={`/admin/products/edit/${product._id}`}
-                              className="text-primary-600 hover:text-primary-900"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Link>
-                            <button className="text-red-600 hover:text-red-900">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Orders Tab */}
-          {activeTab === 'orders' && (
-            <div className="bg-white rounded-xl shadow-lg">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">All Orders</h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Order ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Customer
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {recentOrders.map((order) => (
-                      <tr key={order._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {order.orderId}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div>
-                            <div className="font-medium">{order.user.name}</div>
-                            <div className="text-gray-500">{order.user.email}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {formatCurrency(order.total)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(order.createdAt)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-primary-600 hover:text-primary-900">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Customers Tab */}
-          {activeTab === 'customers' && (
-            <div className="bg-white rounded-xl shadow-lg">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">Customers</h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Customer
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Orders
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Total Spent
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {recentOrders.map((order) => (
-                      <tr key={order._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {order.user.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {order.user.email}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          1
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {formatCurrency(order.total)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-primary-600 hover:text-primary-900">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+            {/* --- Render other Tabs --- */}
+            {activeTab === "overview" && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+                className="text-center p-10 bg-white rounded-xl shadow-lg">
+                Overview Tab Content Goes Here
+              </motion.div>
+            )}
+            {activeTab === "orders" && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+                className="text-center p-10 bg-white rounded-xl shadow-lg">
+                Orders Tab Content Goes Here
+              </motion.div>
+            )}
+            {activeTab === "customers" && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+                className="text-center p-10 bg-white rounded-xl shadow-lg">
+                Customers Tab Content Goes Here
+              </motion.div>
+            )}
+          </div>
         </div>
+        {/* --- END OF SCROLLING CONTENT --- */}
+
       </div>
     </>
   );

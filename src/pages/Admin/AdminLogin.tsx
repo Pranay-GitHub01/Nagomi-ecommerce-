@@ -7,7 +7,7 @@ import * as yup from 'yup';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '../../stores/useAuthStore';
-
+import { API_BASE_URL } from '../../api/config';
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
   password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
@@ -33,7 +33,7 @@ const AdminLogin: React.FC = () => {
     setError(null);
     try {
       // Send role: 'admin' in the body
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/login`, {
+      const res = await fetch(`${API_BASE_URL || 'http://localhost:5000'}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, role: 'admin' }),

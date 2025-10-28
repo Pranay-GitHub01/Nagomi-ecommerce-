@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Product } from "../../types";
 import { Search, Heart, ShoppingCart, User, Menu, X } from "lucide-react";
@@ -9,11 +9,10 @@ import { useWishlistStore } from "../../stores/useWishlistStore";
 import { API_BASE_URL } from "../../api/config";
 
 const PRIMARY_COLOR_TEXT = "text-blue-900";
-const SECONDARY_COLOR_TEXT = "text-blue-800"; // Changed from text-gray-700
-const ACCENT_COLOR_HOVER = "hover:text-blue-900"; // Changed from hover:text-blue-700
+const SECONDARY_COLOR_TEXT = "text-blue-800";
+const ACCENT_COLOR_HOVER = "hover:text-blue-900";
 const ACCENT_BG = "bg-blue-700";
 const BG_COLOR_LIGHT = "bg-white";
-
 
 const ACTIVE_LINK_CLASSES = `${PRIMARY_COLOR_TEXT} font-bold border-b-2 border-blue-700 pb-1`;
 const INACTIVE_LINK_CLASSES = `${SECONDARY_COLOR_TEXT} font-semibold ${ACCENT_COLOR_HOVER} hover:border-b-2 hover:border-blue-300 pb-1`;
@@ -36,6 +35,9 @@ const Navbar: React.FC = () => {
   const { getTotalItems: getWishlistItems } = useWishlistStore();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isSearchOpen && allProducts.length === 0) {
@@ -74,6 +76,27 @@ const Navbar: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchValue, allProducts]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileButtonRef.current &&
+        !profileButtonRef.current.contains(event.target as Node) &&
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    if (isProfileOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isProfileOpen]);
+
   const handleSearch = () => {
     if (searchValue.trim()) {
       setIsSearchOpen(false);
@@ -101,7 +124,10 @@ const Navbar: React.FC = () => {
     <>
       {/* Announcement Banner */}
       <div className="w-full z-50">
-        <div className="relative w-full h-8 flex items-center overflow-hidden" style={{background: '#1d4ed8'}}>
+        <div
+          className="relative w-full h-8 flex items-center overflow-hidden"
+          style={{ background: "#1d4ed8" }}
+        >
           <div className="flex-1 h-full flex items-center justify-center">
             <div
               className="whitespace-nowrap font-medium text-sm animate-marquee px-4 text-white"
@@ -117,9 +143,7 @@ const Navbar: React.FC = () => {
         </div>
       </div>
       {/* Main Navbar */}
-      <nav
-        className={`${BG_COLOR_LIGHT} border-b w-full h-18 border-gray-100`}
-      >
+      <nav className={`${BG_COLOR_LIGHT} border-b w-full h-18 border-gray-100`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
@@ -129,7 +153,6 @@ const Navbar: React.FC = () => {
                 alt="Nagomi"
                 className="h-14 w-auto filter drop-shadow-sm"
               />
-             
             </Link>
 
             {/* Desktop Navigation - Hidden on mobile */}
@@ -200,6 +223,7 @@ const Navbar: React.FC = () => {
               {/* User/Profile Dropdown */}
               <div className="relative">
                 <button
+                  ref={profileButtonRef}
                   onClick={() => setIsProfileOpen((open) => !open)}
                   className={`p-2 ${SECONDARY_COLOR_TEXT} ${ACCENT_COLOR_HOVER} transition-colors focus:outline-none`}
                 >
@@ -209,15 +233,24 @@ const Navbar: React.FC = () => {
                 <AnimatePresence>
                   {isProfileOpen && (
                     <motion.div
+                      ref={profileDropdownRef}
                       initial={{ opacity: 0, y: -8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-3"
                     >
+                      <button
+                        onClick={() => setIsProfileOpen(false)}
+                        className={`absolute top-2 right-2 p-1 rounded-full ${SECONDARY_COLOR_TEXT} hover:bg-blue-50 ${ACCENT_COLOR_HOVER}`}
+                        aria-label="Close"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+
                       {user ? (
                         <div className="flex flex-col gap-1">
                           <div
-                            className={`font-bold ${PRIMARY_COLOR_TEXT} truncate mb-2 border-b border-gray-100 pb-2`}
+                            className={`font-bold ${PRIMARY_COLOR_TEXT} truncate mb-2 border-b border-gray-100 pb-2 pr-6`}
                           >
                             Hello, {user.name.split(" ")[0]}
                           </div>
@@ -246,9 +279,10 @@ const Navbar: React.FC = () => {
                           </button>
                         </div>
                       ) : (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 pt-6">
                           <Link
                             to="/login"
+                            // THIS LINE IS FIXED
                             onClick={() => setIsProfileOpen(false)}
                             className={`w-full text-center ${ACCENT_BG} text-white font-semibold py-2 rounded-lg hover:bg-blue-800 transition`}
                           >
@@ -261,6 +295,17 @@ const Navbar: React.FC = () => {
                           >
                             Create Account
                           </Link>
+
+                          {/* --- ADDED DIVIDER AND ADMIN LINK --- */}
+                          <div className="border-t border-gray-100 my-2"></div>
+                          <Link
+                            to="/admin"
+                            onClick={() => setIsProfileOpen(false)}
+                            className={`w-full text-center text-sm ${SECONDARY_COLOR_TEXT} hover:underline`}
+                          >
+                            Admin Panel
+                          </Link>
+                          {/* --- END OF ADDITION --- */}
                         </div>
                       )}
                     </motion.div>
@@ -299,14 +344,14 @@ const Navbar: React.FC = () => {
                 <button
                   key={item.name}
                   onClick={() => navigateAndClose(item.href)}
-                  className={`block w-full text-left py-2 px-3 text-lg font-medium transition-colors rounded-lg 
-                      ${
-                        location.pathname === item.href ||
-                        (item.href !== "/" &&
-                          location.pathname.startsWith(item.href))
-                          ? "bg-blue-100 text-blue-800 font-bold"
-                          : "text-blue-900 hover:bg-blue-50"
-                      }`}
+                  className={`block w-full text-left py-2 px-3 text-lg font-medium transition-colors rounded-lg
+                    ${
+                      location.pathname === item.href ||
+                      (item.href !== "/" &&
+                        location.pathname.startsWith(item.href))
+                        ? "bg-blue-100 text-blue-800 font-bold"
+                        : "text-blue-900 hover:bg-blue-50"
+                    }`}
                 >
                   {item.name}
                 </button>
