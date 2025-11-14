@@ -175,6 +175,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {isImageLoading && !imageLoadError && (
               <div className="absolute inset-0 flex items-center justify-center z-0">
                 <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+                
               </div>
             )}
 
@@ -202,15 +203,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {/* Badges */}
             <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
               {product.bestseller && (
-                <span className="bg-yellow-400 text-yellow-900 px-2.5 py-0.5 rounded-full text-xs font-semibold shadow">
+                <span className="bg-[#172b9b] text-white px-2.5 py-0.5 rounded-full text-xs font-semibold shadow">
                   Bestseller
                 </span>
               )}
-              {hasOriginalPrice && (
+              {/* {hasOriginalPrice && (
                 <span className="bg-red-500 text-white px-2.5 py-0.5 rounded-full text-xs font-semibold shadow">
                   Sale
                 </span>
-              )}
+              )} */}
             </div>
 
             {/* Wishlist Button */}
@@ -243,7 +244,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               <p className="font-bold text-[#1428a0] text-lg">
                  ₹{displayPrice.toLocaleString('en-IN')}
                  {(product.category?.toLowerCase() === 'wallpaper' || product.category?.toLowerCase() === 'wall-art') && (
-                    <span className="text-xs font-normal text-gray-500"> / sq ft</span>
+                    <span className="text-xs font-normal text-gray-500"> / sq.ft</span>
                  )}
               </p>
               {hasOriginalPrice && (

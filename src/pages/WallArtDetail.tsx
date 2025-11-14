@@ -264,7 +264,7 @@ const WallArtDetail: React.FC = () => {
                <p className="text-xs text-gray-500 font-lora -mt-4">inclusive of all taxes</p>
 
                {/* Color Selection */}
-               {product.colors && product.colors.length > 1 && product.variants && product.colors.length === product.variants.length && (
+               {product.colors && product.colors.length &&  product.variants && product.colors.length === product.variants.length && (
                   <div>
                     <label className="block text-sm font-semibold text-[#172b9b] mb-2 font-lora"> Color: <span className="text-gray-700 font-medium ml-1">{selectedColorName}</span> </label>
                     <div className="flex flex-wrap gap-2">
@@ -275,6 +275,7 @@ const WallArtDetail: React.FC = () => {
                     </div>
                   </div>
                 )}
+              {/**/} 
 
                {/* --- REPLACED Quantity with Size Selection --- */}
                {hasPredefinedSizes && currentVariant && (

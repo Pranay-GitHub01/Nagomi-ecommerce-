@@ -7,6 +7,7 @@ import { API_BASE_URL } from '../api/config';
 const Bestsellers: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
 
+
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/products`)
       .then(r => r.json())

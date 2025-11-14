@@ -560,6 +560,10 @@ interface ProductFormData {
     size: string[];
     mrp: string[];
     sellingPrice: string[];
+
+    id: string; // <-- ADD THIS
+    color: string; // <-- ADD THIS
+
   }>;
 }
 
@@ -578,14 +582,49 @@ const schema = yup.object({
   materials: yup.array().of(yup.string().required()).optional().default([]),
   roomTypes: yup.array().of(yup.string().required()).optional().default([]),
   // images: yup.array()... // Removed images validation
+// ...
   variants: yup.array().of(
     yup.object({
         images: yup.array().of(yup.string().required()).optional(),
-        size: yup.array().of(yup.string().required()).min(1, "Variant size is required"),
-        mrp: yup.array().of(yup.string().required()).min(1, "Variant MRP is required"),
-        sellingPrice: yup.array().of(yup.string().required()).min(1, "Variant Selling Price is required"),
+
+        // --- UPDATED FIELDS START HERE ---
+
+        id: yup.string().required("Variant ID is required"),
+        color: yup.string().required("Variant color is required"),
+
+
+        size: yup.array().of(yup.string().required())
+            .transform((value, originalValue) => {
+              if (typeof originalValue === 'string') {
+                // Split the string by comma, trim whitespace, and filter out empty strings
+                return originalValue.split(',').map(s => s.trim()).filter(Boolean);
+              }
+              return value; // Return the value as-is if it's not a string
+            })
+            .min(1, "Variant size is required"),
+
+        mrp: yup.array().of(yup.string().required())
+            .transform((value, originalValue) => {
+              if (typeof originalValue === 'string') {
+                return originalValue.split(',').map(s => s.trim()).filter(Boolean);
+              }
+              return value;
+            })
+            .min(1, "Variant MRP is required"),
+
+        sellingPrice: yup.array().of(yup.string().required())
+            .transform((value, originalValue) => {
+              if (typeof originalValue === 'string') {
+                return originalValue.split(',').map(s => s.trim()).filter(Boolean);
+              }
+              return value;
+            })
+            .min(1, "Variant Selling Price is required"),
+        
+        // --- UPDATED FIELDS END HERE ---
     })
   ).optional().default([]),
+// ...  
 });
 
 
@@ -685,6 +724,8 @@ const AddProduct: React.FC = () => {
     "Wallpaper",
     "Wallpaper-Roll",
     "wall-art",
+  "peel-n-stick",
+  "luxe",
   ]);
 
   const {
@@ -856,8 +897,34 @@ const AddProduct: React.FC = () => {
                          <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
                              Wall Art Variants (Size & Price)
                          </h2>
-                         <div className="space-y-4 border p-4 rounded-md">
+                        <div className="space-y-4 border p-4 rounded-md">
                              <h3 className="text-md font-medium text-gray-700">Variant 1</h3>
+                             
+                             {/* --- ADD THIS GRID --- */}
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                   <label htmlFor="variants.0.id" className={labelClasses}> Variant ID (SKU) </label>
+                                   <input
+                                       id="variants.0.id"
+                                       {...register("variants.0.id")}
+                                       placeholder="e.g., WA-ART-001A"
+                                       className={getInputClasses(`variants.0.id`)}
+                                   />
+                                   {errors.variants?.[0]?.id && <p className={errorClasses}>{errors.variants[0].id.message}</p>}
+                                </div>
+                                <div>
+                                   <label htmlFor="variants.0.color" className={labelClasses}> Variant Color </label>
+                                   <input
+                                       id="variants.0.color"
+                                       {...register("variants.0.color")}
+                                       placeholder="e.g., Rustic Brown"
+                                       className={getInputClasses(`variants.0.color`)}
+                                   />
+                                   {errors.variants?.[0]?.color && <p className={errorClasses}>{errors.variants[0].color.message}</p>}
+                                </div>
+                             </div>
+                             {/* --- END OF ADDED GRID --- */}
+
                               <div>
                                  <label htmlFor="variants.0.size" className={labelClasses}> Size(s) (comma-separated)</label>
                                  <input

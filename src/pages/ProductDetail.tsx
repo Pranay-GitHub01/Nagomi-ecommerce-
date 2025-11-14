@@ -1,5 +1,5 @@
 // src/pages/ProductDetail.tsx
-
+import ReviewSection from '../components/Review/Review';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -101,8 +101,8 @@ const ProductDetail: React.FC = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0); // Re-added selectedImageIndex
   const [selectedMaterial, setSelectedMaterial] = useState('Non-woven Smooth');
   const [quantity] = useState(1);
-  const [wallHeight, setWallHeight] = useState<number | ''>(120);
-  const [wallWidth, setWallWidth] = useState<number | ''>(120);
+  const [wallHeight, setWallHeight] = useState<number | ''>(10);
+  const [wallWidth, setWallWidth] = useState<number | ''>(10);
   const [includeInstallation, setIncludeInstallation] = useState(true);
   const [pinCode, setPinCode] = useState('');
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -684,6 +684,7 @@ const ProductDetail: React.FC = () => {
            {/* Recently Viewed */}
             {/* ... placeholder ... */}
            {/* Reviews Section */}
+<ReviewSection/>
             {/* ... placeholder ... */}
 
 

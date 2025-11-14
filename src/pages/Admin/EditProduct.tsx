@@ -164,6 +164,44 @@ const EditProductPage: React.FC = () => {
   const setRoomTypes = React.useCallback((items: string[]) => setProduct(prev => ({ ...prev, roomTypes: items })), []);
   const setImages = React.useCallback((items: string[]) => setProduct(prev => ({ ...prev, images: items })), []);
 
+
+
+
+const handleVariantChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+    field: 'id' | 'color' | 'size' | 'mrp' | 'sellingPrice'
+  ) => {
+    const { value } = e.target;
+    
+    setProduct(prev => {
+      // Create a deep copy of the variants array
+      const newVariants = prev.variants ? prev.variants.map(v => ({ ...v })) : [];
+
+      // Ensure the variant at the specified index exists
+      if (!newVariants[index]) {
+        // Initialize with all keys to prevent errors
+        newVariants[index] = { id: '', color: '', images: [], size: [], mrp: [], sellingPrice: [] };
+      }
+
+      // Update the specific field
+      if (field === 'size' || field === 'mrp' || field === 'sellingPrice') {
+        // Convert comma-separated string back to array
+        newVariants[index][field] = value.split(',').map(s => s.trim()).filter(Boolean);
+      } else if (field === 'id' || field === 'color') {
+        // Handle simple string fields
+        newVariants[index][field] = value;
+      }
+
+      return { ...prev, variants: newVariants };
+    });
+  };
+
+
+
+
+
+
   // --- Handle Form Submission (Save Changes) ---
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -357,8 +395,10 @@ const EditProductPage: React.FC = () => {
                    <select id="category" name="category" value={product.category || ''} onChange={handleChange} required className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                      <option value="">Select Category</option>
                      <option value="Wallpaper">Wallpaper</option>
-                     <option value="wall-art">Wall Art</option>
-                     <option value="Wallpaper-Roll">Wallpaper Roll</option>
+                     <option value="wall-art">wall-art</option>
+                     <option value="Wallpaper-Roll">Wallpaper-Roll</option>
+                     <option value ="luxe">luxe</option>
+                     <option value ="peel-n-stick">peel-n-stick</option>
                    </select>
                  </div>
                  <div className="flex items-center pt-6">
@@ -393,29 +433,84 @@ const EditProductPage: React.FC = () => {
                    </p>
                  </div>
              </fieldset>
-
-            {/* Variants Section (Keep as is, basic example) */}
+          {/* Variants Section */}
             {product.category === 'wall-art' && (
               <fieldset className="space-y-4 border-t pt-4">
-                 <legend className="text-lg font-medium text-gray-900 mb-2">Variants (Basic Example)</legend>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Size Input */}
+                <legend className="text-lg font-medium text-gray-900 mb-2">Variants (Variant 1)</legend>
+                <p className="text-sm text-gray-500">
+                  Editing for the first variant. This matches all fields from the 'Add Product' page.
+                </p>
+
+                {/* --- ID and Color Inputs --- */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Variant ID Input */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Size (Variant 1)</label>
-                        <input type="text" value={product.variants?.[0]?.size?.[0] || ''} onChange={e => { const newVariants = [...(product.variants || [])]; if (!newVariants[0]) newVariants[0] = { size: [], mrp: [], sellingPrice: [] }; newVariants[0].size = [e.target.value]; setProduct(prev => ({ ...prev, variants: newVariants })); }} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"/>
+                        <label htmlFor="variant-0-id" className="block text-sm font-medium text-gray-700">Variant ID (SKU)</label>
+                        <input
+                            type="text"
+                            id="variant-0-id"
+                            value={product.variants?.[0]?.id ||product.skuId || ''}
+                            onChange={e => handleVariantChange(e, 0, 'id')}
+                            className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            placeholder="e.g., WA-ART-001A"
+                        />
                     </div>
-                     {/* MRP Input */}
+                    {/* Variant Color Input */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">MRP (₹) (Variant 1)</label>
-                        <input type="text" value={product.variants?.[0]?.mrp?.[0] || ''} onChange={e => { const newVariants = [...(product.variants || [])]; if (!newVariants[0]) newVariants[0] = { size: [], mrp: [], sellingPrice: [] }; newVariants[0].mrp = [e.target.value]; setProduct(prev => ({ ...prev, variants: newVariants })); }} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"/>
-                    </div>
-                     {/* Selling Price Input */}
-                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Selling Price (₹) (Variant 1)</label>
-                        <input type="text" value={product.variants?.[0]?.sellingPrice?.[0] || ''} onChange={e => { const newVariants = [...(product.variants || [])]; if (!newVariants[0]) newVariants[0] = { size: [], mrp: [], sellingPrice: [] }; newVariants[0].sellingPrice = [e.target.value]; setProduct(prev => ({ ...prev, variants: newVariants })); }} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"/>
+                        <label htmlFor="variant-0-color" className="block text-sm font-medium text-gray-700">Variant Color</label>
+                        <input
+                            type="text"
+                            id="variant-0-color"
+                            value={product.variants?.[0]?.color || ''}
+                            onChange={e => handleVariantChange(e, 0, 'color')}
+                            className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            placeholder="e.g., Rustic Brown"
+                        />
                     </div>
                 </div>
-                 <p className="mt-2 text-xs text-gray-500">Note: Variant editing is simplified. Implement full add/edit/delete logic as needed.</p>
+
+                {/* --- Size, MRP, and Price Inputs --- */}
+                <div className="space-y-4 pt-4">
+                    {/* Size Input (Comma-separated) */}
+                    <div>
+                        <label htmlFor="variant-0-size" className="block text-sm font-medium text-gray-700">Size(s) (comma-separated)</label>
+                        <input
+                            type="text"
+                            id="variant-0-size"
+                            value={product.variants?.[0]?.size?.join(', ') ||''}
+                            onChange={e => handleVariantChange(e, 0, 'size')}
+                            className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            placeholder="e.g., 3x2 feet, 6x3 feet"
+                        />
+                    </div>
+                    {/* MRP Input (Comma-separated) */}
+                    <div>
+                        <label htmlFor="variant-0-mrp" className="block text-sm font-medium text-gray-700">MRP(s) (comma-separated)</label>
+                        <input
+                            type="text"
+                            id="variant-0-mrp"
+                            value={product.variants?.[0]?.mrp?.join(', ') || ''}
+                            onChange={e => handleVariantChange(e, 0, 'mrp')}
+                            className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            placeholder="e.g., 17000, 40000"
+                        />
+                    </div>
+                    {/* Selling Price Input (Comma-separated) */}
+                    <div>
+                        <label htmlFor="variant-0-sellingPrice" className="block text-sm font-medium text-gray-700">Selling Price(s) (comma-separated)</label>
+                        <input
+                            type="text"
+                            id="variant-0-sellingPrice"
+                            value={product.variants?.[0]?.sellingPrice?.join(', ') || ''}
+                            onChange={e => handleVariantChange(e, 0, 'sellingPrice')}
+                            className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            placeholder="e.g., 9500, 23000"
+                        />
+                    </div>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                    Note: Ensure size, MRP, and selling price orders match.
+                </p>
               </fieldset>
             )}
 
