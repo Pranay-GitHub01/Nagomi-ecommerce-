@@ -9,6 +9,7 @@ import { FilterOptions, Product } from '../types/index';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { API_BASE_URL } from '../api/config';
 import { ChevronDown, SlidersHorizontal, ChevronLeft, ChevronRight, X, ArrowDownWideNarrow, ListFilter } from 'lucide-react';
+import ReviewSection from '../components/Review/Review';
 
 const PRODUCTS_PER_PAGE = 21;
 
@@ -448,7 +449,7 @@ const WallRollPage: React.FC = () => {
                  </div>
             )}
          </AnimatePresence>
-
+<ReviewSection/>
       </div>
     </>
   );

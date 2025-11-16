@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Product, Review } from "../types"; // Make sure Review type is imported
 import { API_BASE_URL } from "../api/config";
 import { motion } from "framer-motion";
-import ReviewSection from "../components/Reviews/ReviewSection"; // Assuming ReviewSection is imported
+// Assuming ReviewSection is imported
 
 const heroSlides = [
   {
@@ -127,11 +127,11 @@ export default function Home() {
       image:
         "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=facearea&w=400&h=400",
     },
-    {
-      name: "Signature Art",
-      image:
-        "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=facearea&w=400&h=400",
-    },
+    // {
+    //   name: "Signature Art",
+    //   image:
+    //     "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=facearea&w=400&h=400",
+    // },
     {
       name: "Wallpaper Rolls",
       image:
@@ -468,7 +468,7 @@ export default function Home() {
               Shop by Category{" "}
               <span className="block w-16 h-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mt-2"></span>{" "}
             </motion.h2>
-            <div className="grid grid-cols-3 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
+            <div className="grid grid-cols-3 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
               {shopCategories.map((cat, i) => (
                 <motion.div
                   key={cat.name}
@@ -500,7 +500,7 @@ export default function Home() {
                           ? "/wallpapers"
                           : cat.name === "Wallpaper Rolls"
                           ? "/wallroll"
-                          : cat.name === "Designer Walls"
+                          : cat.name === "Peel & Stick "
                           ? "/peelnstick"
                           : cat.name === "Luxe Collections"
                           ? "/luxe"
@@ -562,7 +562,7 @@ export default function Home() {
                             >
                               <div className="block group w-full">
                                 <Link
-                                  to={`/wallpapers/${
+                                  to={`/${product.category}/${
                                     product._id || product.id
                                   }`}
                                   tabIndex={0}
@@ -571,7 +571,7 @@ export default function Home() {
                                   <div className="bg-white border border-blue-100 rounded-2xl transition-all duration-300 overflow-hidden group-hover:shadow-lg group-hover:border-blue-200 focus-within:shadow-lg focus-within:border-blue-300 transform scale-90 group-hover:scale-95">
                                     <div className="w-full h-48 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100">
                                       {product.bestseller && (
-                                        <span className="absolute top-2 left-2 bg-blue-700 text-white px-2 py-1 rounded-tl-xl rounded-br-xl text-xs font-bold shadow-lg border border-yellow-600 animate-pulse z-10">
+                                        <span className="absolute top-2 left-2 bg-blue-[#172b9b] text-white px-2 py-1 rounded-tl-xl rounded-br-xl text-xs font-bold shadow-lg border border-yellow-600 animate-pulse z-10">
                                           {" "}
                                           Bestseller{" "}
                                         </span>
@@ -616,14 +616,14 @@ export default function Home() {
                                         {" "}
                                         <span className="text-xl font-bold text-blue-700">
                                           {" "}
-                                          ₹99 / sq ft{" "}
+                                          ₹{product.price}{" "}
                                         </span>{" "}
                                         {product.originalPrice && (
                                           <span className="text-base text-blue-300 line-through">
                                             {" "}
-                                            ₹120 / sq ft{" "}
+                                            ₹{product.originalPrice.toFixed(2)}{" "}
                                           </span>
-                                        )}{" "}
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -991,14 +991,14 @@ export default function Home() {
                         >
                           <div className="block group w-full">
                             <Link
-                              to={`/wallpapers/${product._id || product.id}`}
+                              to={`${product.category}/${product._id || product.id}`}
                               tabIndex={0}
                               aria-label={`View details for ${product.name}`}
                             >
                               <div className="bg-white border border-blue-100 rounded-2xl transition-all duration-300 p-6 w-full flex flex-col items-center group-hover:shadow-lg group-hover:border-blue-200 focus-within:shadow-lg focus-within:border-blue-300 transform scale-90 group-hover:scale-95">
                                 <div className="w-36 h-36 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center mb-4 relative">
                                   {product.bestseller && (
-                                    <span className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg border border-yellow-600 animate-pulse z-10">
+                                    <span className="absolute top-2 left-2 bg-[#172b9b] text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg border border-yellow-600 animate-pulse z-10">
                                       {" "}
                                       Bestseller{" "}
                                     </span>
@@ -1035,7 +1035,7 @@ export default function Home() {
                                   {product.originalPrice && (
                                     <span className="text-base text-blue-300 line-through">
                                       {" "}
-                                      ₹{product.originalPrice}{" "}
+                                      ₹{product.originalPrice.toFixed(2)}{" "}
                                     </span>
                                   )}{" "}
                                 </div>

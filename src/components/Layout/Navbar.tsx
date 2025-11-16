@@ -7,6 +7,7 @@ import { useAuthStore } from "../../stores/useAuthStore";
 import { useCartStore } from "../../stores/useCartStore";
 import { useWishlistStore } from "../../stores/useWishlistStore";
 import { API_BASE_URL } from "../../api/config";
+import { CgProductHunt } from "react-icons/cg";
 
 const PRIMARY_COLOR_TEXT = "text-blue-900";
 const SECONDARY_COLOR_TEXT = "text-blue-800";
@@ -440,12 +441,12 @@ const Navbar: React.FC = () => {
                       {searchResults.map((product) => (
                         <Link
                           key={product._id || product.id}
-                          to={`/wallpapers/${product._id || product.id}`}
+                          to={`${product.category}/${product._id || product.id}`}
                           onClick={() => setIsSearchOpen(false)}
                         >
                           <div className="flex items-center space-x-4 p-2 hover:bg-blue-50 rounded-lg transition">
                             <img
-                              src={product.images?.[0] || "/logo.png"}
+                              src={`${API_BASE_URL}${product.images[0]}` || "/logo.png"}
                               alt={product.name}
                               className="h-14 w-14 object-cover rounded-md flex-shrink-0 border border-gray-100"
                             />
@@ -468,7 +469,7 @@ const Navbar: React.FC = () => {
                         </Link>
                       ))}
                       <Link
-                        to={`/wallpapers?search=${encodeURIComponent(
+                        to={`/${allProducts.category}?search=${encodeURIComponent(
                           searchValue.trim()
                         )}`}
                         onClick={() => setIsSearchOpen(false)}

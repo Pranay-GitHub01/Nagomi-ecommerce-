@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Product } from '../types'; 
 import { API_BASE_URL } from '../api/config';
 import { Loader2, ServerCrash } from 'lucide-react';
+import {Link} from "react-router-dom"
 
 // --- Helper: Get Image URL ---
 // This logic is from your pasted code, but I've changed 'product.image'
@@ -15,6 +16,9 @@ const getImageUrl = (images?: string[]) => {
   if (img.startsWith('http')) return img;
   return `${API_BASE_URL.replace(/\/$/, '')}/${img.replace(/^\//, '')}`;
 };
+
+
+
 
 // --- ProductCard Component ---
 // MOVED OUTSIDE of Bestsellers component to fix "fluctuating"
@@ -33,6 +37,8 @@ const handleImageError = () => {
       className="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-full"
     >
       <div className="h-48 w-full bg-gray-100 flex items-center justify-center">
+           
+        
         <img
           src={imageUrl}
         
@@ -41,6 +47,7 @@ const handleImageError = () => {
           // Changed to object-cover to fill the space, 'contain' can look empty
           className="object-cover h-full w-full"
         />
+       
       </div>
 
       <div className="p-4 flex-1 flex flex-col">
@@ -58,6 +65,7 @@ const handleImageError = () => {
     </motion.div>
   );
 };
+
 
 
 // --- Bestsellers Page Component ---
@@ -136,8 +144,15 @@ const Bestsellers: React.FC = () => {
     ));
   };
 
+const productLink = `${products.category}/${products._id || products.id}`;
+console.log("Product Link:", productLink);
+
   return (
+
     <div className="min-h-screen bg-[#f7f8fa] py-12 px-4">
+    
+     
+
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -175,8 +190,12 @@ const Bestsellers: React.FC = () => {
 
       {/* --- Product Grid --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-        {renderContent()}
+        
+          {renderContent()}
+        
+      
       </div>
+           
     </div>
   );
 };

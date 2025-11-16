@@ -12,6 +12,7 @@ import UploadProductImagePage from "./pages/Admin/UploadProductImagePage";
 import { Upload } from "lucide-react";
 // Lazy load all page-level components
  import LuxePage from "./pages/LuxePage";
+import PeelNstick from "./pages/PeelNstick";
 
 
 const Home = lazy(() => import("./pages/Home"));
@@ -77,6 +78,7 @@ function App() {
           <Routes>
             {/* Main Application Layout */}
             <Route path="/" element={<Layout />}>
+            
               <Route index element={<Home />} />
               <Route path="wallpapers" element={<Products />} />
               <Route path="Wallpaper/:id" element={<ProductDetail />} />
@@ -90,10 +92,12 @@ function App() {
               <Route path="orders/:id" element={<OrderDetail />} />
               <Route path="privacy" element={<PrivacyPolicy />} />
               <Route path="bestsellers" element={<Bestsellers />} />
+               
               <Route path="*" element={<NotFound />} />
               <Route path="wallroll" element={<WallRoll />}/>
               <Route path="Wallpaper-Roll/:id" element={<WallRollDetail />}/>
               <Route path="luxe" element={<LuxePage />}/>
+              <Route path ="peelnstick" element={<PeelNstick></PeelNstick>}></Route>
             </Route>
 
             {/* Standalone pages (no main layout) */}
