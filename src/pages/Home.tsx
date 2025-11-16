@@ -138,12 +138,12 @@ export default function Home() {
         "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=facearea&w=400&h=400",
     },
     {
-      name: "Designer Walls",
+      name: "Peel & Stick ",
       image:
         "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=facearea&w=400&h=400",
     },
     {
-      name: "Wall Muralists",
+      name: "Luxe Collections",
       image:
         "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=facearea&w=400&h=400",
     },
@@ -500,6 +500,10 @@ export default function Home() {
                           ? "/wallpapers"
                           : cat.name === "Wallpaper Rolls"
                           ? "/wallroll"
+                          : cat.name === "Designer Walls"
+                          ? "/peelnstick"
+                          : cat.name === "Luxe Collections"
+                          ? "/luxe"
                           : `/wallpapers?category=${encodeURIComponent(
                               cat.name
                             )}`
@@ -567,7 +571,7 @@ export default function Home() {
                                   <div className="bg-white border border-blue-100 rounded-2xl transition-all duration-300 overflow-hidden group-hover:shadow-lg group-hover:border-blue-200 focus-within:shadow-lg focus-within:border-blue-300 transform scale-90 group-hover:scale-95">
                                     <div className="w-full h-48 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100">
                                       {product.bestseller && (
-                                        <span className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded-tl-xl rounded-br-xl text-xs font-bold shadow-lg border border-yellow-600 animate-pulse z-10">
+                                        <span className="absolute top-2 left-2 bg-blue-700 text-white px-2 py-1 rounded-tl-xl rounded-br-xl text-xs font-bold shadow-lg border border-yellow-600 animate-pulse z-10">
                                           {" "}
                                           Bestseller{" "}
                                         </span>
@@ -994,7 +998,7 @@ export default function Home() {
                               <div className="bg-white border border-blue-100 rounded-2xl transition-all duration-300 p-6 w-full flex flex-col items-center group-hover:shadow-lg group-hover:border-blue-200 focus-within:shadow-lg focus-within:border-blue-300 transform scale-90 group-hover:scale-95">
                                 <div className="w-36 h-36 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center mb-4 relative">
                                   {product.bestseller && (
-                                    <span className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg border border-yellow-600 animate-pulse z-10">
+                                    <span className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg border border-yellow-600 animate-pulse z-10">
                                       {" "}
                                       Bestseller{" "}
                                     </span>

@@ -434,7 +434,7 @@ const handleVariantChange = (
                  </div>
              </fieldset>
           {/* Variants Section */}
-            {product.category === 'wall-art' && (
+            {(product.category === 'wall-art'||product.category === 'peel-n-stick'||product.category === 'luxe') && (
               <fieldset className="space-y-4 border-t pt-4">
                 <legend className="text-lg font-medium text-gray-900 mb-2">Variants (Variant 1)</legend>
                 <p className="text-sm text-gray-500">

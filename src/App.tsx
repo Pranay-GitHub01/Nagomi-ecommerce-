@@ -11,6 +11,9 @@ import WallRollDetail from "./pages/WallRollDetail";
 import UploadProductImagePage from "./pages/Admin/UploadProductImagePage";
 import { Upload } from "lucide-react";
 // Lazy load all page-level components
+ import LuxePage from "./pages/LuxePage";
+
+
 const Home = lazy(() => import("./pages/Home"));
 const Products = lazy(() => import("./pages/Products"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -90,6 +93,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
               <Route path="wallroll" element={<WallRoll />}/>
               <Route path="Wallpaper-Roll/:id" element={<WallRollDetail />}/>
+              <Route path="luxe" element={<LuxePage />}/>
             </Route>
 
             {/* Standalone pages (no main layout) */}

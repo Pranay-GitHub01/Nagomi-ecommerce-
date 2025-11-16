@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../../stores/useCartStore';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../../api/config';
 
 const CartSidebar: React.FC = () => {
   const { items: storeItems, isOpen, toggleCart, updateQuantity, removeItem, getTotalPrice } = useCartStore();
@@ -90,7 +91,7 @@ const CartSidebar: React.FC = () => {
                         style={{ textDecoration: 'none' }}
                       >
                         <img
-                          src={Array.isArray(item.product.images) && item.product.images.length > 0 ? `/images/${item.product.images[0].split('/').pop()}` : '/placeholder.jpg'}
+                          src={Array.isArray(item.product.images) && item.product.images.length > 0 ? `${API_BASE_URL}${item.product.images[0]}` : '/placeholder.jpg'}
                           alt={item.product.name}
                           className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                         />

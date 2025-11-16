@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, Trash2 } from 'lucide-react';
 import { useWishlistStore } from '../../stores/useWishlistStore';
 import { Link } from 'react-router-dom';
-
+import { API_BASE_URL } from '../../api/config';
 const WishlistSidebar: React.FC = () => {
   const { items, isOpen, toggleWishlist, removeFromWishlist, getTotalItems } = useWishlistStore();
 
@@ -54,7 +54,7 @@ const WishlistSidebar: React.FC = () => {
                     Start liking wallpapers to build your collection!
                   </p>
                   <Link
-                    to="/products"
+                    to="/"
                     onClick={toggleWishlist}
                     className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
                   >
@@ -72,7 +72,7 @@ const WishlistSidebar: React.FC = () => {
                       className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"
                     >
                       <img
-                        src={Array.isArray(product.images) && product.images.length > 0 ? `/images/${product.images[0].split('/').pop()}` : '/placeholder.jpg'}
+                        src={Array.isArray(product.images) && product.images.length > 0 ? `${API_BASE_URL}${product.images[0]}` : '/placeholder.jpg'}
                         alt={product.name}
                         className="w-16 h-16 object-cover rounded-lg"
                       />
@@ -87,7 +87,7 @@ const WishlistSidebar: React.FC = () => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Link
-                          to={`/products/${product._id || product.id}`}
+                          to={`/${product.category}/${product._id || product.id}`}
                           onClick={toggleWishlist}
                           className="p-2 hover:bg-gray-200 rounded text-blue-600"
                         >
@@ -120,7 +120,7 @@ const WishlistSidebar: React.FC = () => {
                   </span>
                 </div>
                 <Link
-                  to="/products"
+                  to="/"
                   onClick={toggleWishlist}
                   className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors text-center block"
                 >

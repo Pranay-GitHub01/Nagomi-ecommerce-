@@ -892,10 +892,10 @@ const AddProduct: React.FC = () => {
                 {/* Card: Media (Removed) */}
 
                  {/* Card: Variants (Conditionally Rendered) */}
-                 {selectedCategory === 'wall-art' && (
+                 {(selectedCategory ==="wall-art" || selectedCategory ==="peel-n-stick" ||selectedCategory === "luxe" )&& (
                      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                          <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-                             Wall Art Variants (Size & Price)
+                           Variants (Size & Price)
                          </h2>
                         <div className="space-y-4 border p-4 rounded-md">
                              <h3 className="text-md font-medium text-gray-700">Variant 1</h3>

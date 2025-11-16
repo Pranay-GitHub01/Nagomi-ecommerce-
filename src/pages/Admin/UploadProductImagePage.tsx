@@ -285,7 +285,7 @@ const UploadProductImagePage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Example categories - ensure these match backend expectations if needed
-  const categories = ["Wallpaper", "Wallpaper-Roll", "wall-art"]; // Corrected category names based on API data
+  const categories = ["Wallpaper", "Wallpaper-Roll", "wall-art","luxe","peel-n-stick"]; // Corrected category names based on API data
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedFiles(e.target.files);

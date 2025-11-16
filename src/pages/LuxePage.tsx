@@ -45,7 +45,7 @@ interface WallArtPageState {
 // Use Product type enhanced with optional displayImageSrc
 type ProductWithDisplaySrc = Product & { displayImageSrc?: string };
 
-const WallArtPage: React.FC = () => {
+const LuxePage: React.FC = () => {
     const [wallArtItems, setWallArtItems] = useState<ProductWithDisplaySrc[]>([]); // State holds enhanced Product[]
     const [isLoading, setIsLoading] = useState(true);
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -110,7 +110,7 @@ const WallArtPage: React.FC = () => {
                 // Filter for 'wall-art'
                 const filteredList = allProducts.filter((item: any): item is Product => {
                     const category = (item?.category || '').toString().toLowerCase();
-                    return category === 'wall-art';
+                    return category === 'luxe';
                 });
 
                 // **Map to add displayImageSrc**
@@ -331,11 +331,11 @@ const WallArtPage: React.FC = () => {
                             <nav className="text-sm font-lora text-[#1428a0] mb-2">
                                 <Link to="/" className="hover:underline">Home</Link>
                                 <span className="mx-2">/</span>
-                                <span>Signature Wall Art</span>
+                                <span>Luxe Collections</span>
                             </nav>
                             {/* Title */}
                             <h1 className="text-4xl md:text-5xl font-bold text-[#172b9b] mb-4 font-seasons">
-                                Signature Wall Art {/* Updated Title */}
+                                Luxe Collections {/* Updated Title */}
                             </h1>
                             {/* Subtitle */}
                             <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto italic font-semibold font-lora"> {/* Adjusted font weight */}
@@ -526,4 +526,4 @@ const WallArtPage: React.FC = () => {
     );
 };
 
-export default WallArtPage;
+export default LuxePage;
