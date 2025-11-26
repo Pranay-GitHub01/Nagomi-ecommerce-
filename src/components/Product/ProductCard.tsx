@@ -147,10 +147,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <>
 <Link to={ `/${product.category}/${product._id || product.id}` }>
-      {/* Optional Toast */}
-      
-      
-     
+      {/* Wishlist Toast Notification */}
       {showWishlistToast && (
         <div className="fixed top-6 right-6 z-[100] bg-green-500 text-white px-4 py-2 rounded shadow-lg animate-fade-in">
           Added to wishlist!

@@ -14,7 +14,7 @@ import {
   ImageOff,
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
-import Review from "../components/Review/Review"; // Assuming Review component exists
+import Review from "../components/Review/ReviewSection"; // Assuming Review component exists
 import { useCartStore } from "../stores/useCartStore";
 import { useWishlistStore } from "../stores/useWishlistStore";
 import { Product } from "../types/index";
@@ -52,13 +52,10 @@ const WallArtDetail: React.FC = () => {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
   // Quantity is now fixed at 1 for Wall Art based on this change
-  const quantity = 1;
   const [pinCode, setPinCode] = useState("");
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isLoadingWishlist, setIsLoadingWishlist] = useState(false);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
-  const [materialGuideOpen, setMaterialGuideOpen] = useState(false);
-  const [wallGuideOpen, setWallGuideOpen] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [openFaqs, setOpenFaqs] = useState<{ [key: number]: boolean }>({});
   const [pinCodeChecked, setPinCodeChecked] = useState(false);
@@ -66,9 +63,6 @@ const WallArtDetail: React.FC = () => {
   const [includeInstallation, setIncludeInstallation] = useState(false);
 
   // Custom size state (potentially remove if wall art never uses custom size)
-  const [selectedMaterial, setSelectedMaterial] = useState("Canvas");
-  const [wallHeight, setWallHeight] = useState<number | "">(24);
-  const [wallWidth, setWallWidth] = useState<number | "">(36);
 
   // --- Image state ---
   const [imageList, setImageList] = useState<string[]>(['/placeholder.jpg']);

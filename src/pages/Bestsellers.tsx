@@ -1,72 +1,73 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-// We'll assume the Product type uses 'images' (plural) like your other files
 import { Product } from '../types'; 
 import { API_BASE_URL } from '../api/config';
 import { Loader2, ServerCrash } from 'lucide-react';
-import {Link} from "react-router-dom"
+import { Link } from "react-router-dom";
+import { CgProductHunt } from 'react-icons/cg';
 
 // --- Helper: Get Image URL ---
-// This logic is from your pasted code, but I've changed 'product.image'
-// to 'product.images' to match your other components (like Products.tsx).
-// This consistency is important.
 const getImageUrl = (images?: string[]) => {
-  const img = images?.[0]; // Use the first image from the 'images' array
-  if (!img) return '/images/placeholder.png'; // Fallback path
+  const img = images?.[0]; 
+  if (!img) return '/images/placeholder.png'; 
   if (img.startsWith('http')) return img;
   return `${API_BASE_URL.replace(/\/$/, '')}/${img.replace(/^\//, '')}`;
 };
 
-
-
-
 // --- ProductCard Component ---
-// MOVED OUTSIDE of Bestsellers component to fix "fluctuating"
 type ProductCardProps = { product: Product };
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  // Use 'images' (plural) to match your other files
-  const imageUrl = getImageUrl(product.images); 
-const handleImageError = () => {
-    setImgSrc('/images/placeholder.png');
-  };
-  return (
-    <motion.div
-      layout
-      whileHover={{ scale: 1.03 }}
-      className="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-full"
-    >
-      <div className="h-48 w-full bg-gray-100 flex items-center justify-center">
-           
-        
-        <img
-          src={imageUrl}
-        
-          alt={product.name || 'product'}
-          onError={handleImageError}
-          // Changed to object-cover to fill the space, 'contain' can look empty
-          className="object-cover h-full w-full"
-        />
-       
-      </div>
+  // FIX 1: Initialize state for the image source
+  const initialImage = getImageUrl(product.images);
+  const [imgSrc, setImgSrc] = useState<string>(initialImage);
 
-      <div className="p-4 flex-1 flex flex-col">
-        <h3 className="text-sm md:text-base font-semibold text-blue-900 mb-2">{product.name}</h3>
-        {/* Use a line-clamp for consistent height, even if description is short */}
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2 h-10">{product.description}</p>
-        <div className="mt-auto flex items-center justify-between">
-          <span className="text-lg font-bold text-blue-800">
-            {/* Format price to show currency */}
-            ₹{product.price?.toFixed(2)}
-          </span>
-         
+  // If the product prop changes, reset the image
+  useEffect(() => {
+    setImgSrc(getImageUrl(product.images));
+  }, [product.images]);
+
+  const handleImageError = () => {
+    setImgSrc('/images/placeholder.png'); // This now works because state is defined
+  };
+
+  // Construct the link URL
+  const productLink = `/${product.category}/${product._id || product.id}`;
+
+  return (
+    // FIX 2: Wrap in Link so the card is clickable
+    <Link to={productLink} className="h-full block">
+      <motion.div
+        layout
+        whileHover={{ scale: 1.03 }}
+        className="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-full"
+      >
+        <div className="h-48 w-full bg-gray-100 flex items-center justify-center overflow-hidden">
+          <img
+            src={imgSrc} // Use state here, not the raw variable
+            alt={product.name || 'product'}
+            onError={handleImageError}
+            className="object-cover h-full w-full"
+          />
         </div>
-      </div>
-    </motion.div>
+
+        <div className="p-4 flex-1 flex flex-col">
+          <h3 className="text-sm md:text-base font-semibold text-blue-900 mb-2">
+            {product.name}
+          </h3>
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2 h-10">
+            {product.description}
+          </p>
+          <div className="mt-auto flex items-center justify-between">
+            <span className="text-lg font-bold text-blue-800">
+              ₹{product.price?.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    </Link>
   );
 };
-
-
 
 // --- Bestsellers Page Component ---
 const Bestsellers: React.FC = () => {
@@ -86,7 +87,7 @@ const Bestsellers: React.FC = () => {
       })
       .then((data: Product[]) => {
         setProducts(data);
-        // Derive categories from *all* products (or just bestsellers)
+        // Filter logic looks good
         const bestsellerProducts = data.filter(product => product.bestseller);
         const bestsellerCategories = new Set(bestsellerProducts.map(p => p.category || 'Other'));
         setCategories(['All', ...Array.from(bestsellerCategories)]);
@@ -98,10 +99,8 @@ const Bestsellers: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Filter for bestsellers first
   const bestsellers = useMemo(() => products.filter(product => product.bestseller), [products]);
 
-  // Then, filter by category
   const filteredBestsellers = useMemo(() => {
     if (selectedCategory === 'All') {
       return bestsellers;
@@ -109,8 +108,6 @@ const Bestsellers: React.FC = () => {
     return bestsellers.filter(product => (product.category || 'Other') === selectedCategory);
   }, [bestsellers, selectedCategory]);
 
-
-  // Helper for rendering content
   const renderContent = () => {
     if (loading) {
       return (
@@ -139,20 +136,14 @@ const Bestsellers: React.FC = () => {
     }
 
     return filteredBestsellers.map((product) => (
-      // Use the robust key from your other files
       <ProductCard key={product._id || product.id} product={product} />
     ));
   };
 
-const productLink = `${products.category}/${products._id || products.id}`;
-console.log("Product Link:", productLink);
+  // FIX 3: Removed the broken `const productLink = ...` line from here
 
   return (
-
     <div className="min-h-screen bg-[#f7f8fa] py-12 px-4">
-    
-     
-
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -190,12 +181,8 @@ console.log("Product Link:", productLink);
 
       {/* --- Product Grid --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-        
           {renderContent()}
-        
-      
       </div>
-           
     </div>
   );
 };

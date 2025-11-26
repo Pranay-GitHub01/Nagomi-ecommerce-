@@ -13,7 +13,7 @@ import { Upload } from "lucide-react";
 // Lazy load all page-level components
  import LuxePage from "./pages/LuxePage";
 import PeelNstick from "./pages/PeelNstick";
-
+import PeelNStickDetail from "./pages/PeelNStickDetail";
 
 const Home = lazy(() => import("./pages/Home"));
 const Products = lazy(() => import("./pages/Products"));
@@ -97,7 +97,8 @@ function App() {
               <Route path="wallroll" element={<WallRoll />}/>
               <Route path="Wallpaper-Roll/:id" element={<WallRollDetail />}/>
               <Route path="luxe" element={<LuxePage />}/>
-              <Route path ="peelnstick" element={<PeelNstick></PeelNstick>}></Route>
+              <Route path ="peel-n-stick" element={<PeelNstick></PeelNstick>}></Route>
+              <Route path="peel-n-stick/:id" element={<PeelNStickDetail />}/>
             </Route>
 
             {/* Standalone pages (no main layout) */}

@@ -20,6 +20,10 @@ export interface Product {
   reviews: number;
   inStock: boolean;
   roomTypes: string[];
+  zipCode: string;
+  country: string;
+  phone: string;
+  sequence:string;
 }
 
 export interface CartItem {

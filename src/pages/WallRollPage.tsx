@@ -9,12 +9,11 @@ import { FilterOptions, Product } from '../types/index';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { API_BASE_URL } from '../api/config';
 import { ChevronDown, SlidersHorizontal, ChevronLeft, ChevronRight, X, ArrowDownWideNarrow, ListFilter } from 'lucide-react';
-import ReviewSection from '../components/Review/Review';
+import ReviewSection from '../components/Review/ReviewSection';
 
 const PRODUCTS_PER_PAGE = 21;
 
 // --- Helper Components ---
-// ... (FilterSection, FilterCheckbox remain the same) ...
 interface WallRollPageState {
     openSections: {
         colour: boolean;
@@ -84,7 +83,7 @@ const WallRollPage: React.FC = () => {
       .then(data => {
         if (!Array.isArray(data)) throw new Error("Invalid API response");
 
-        // **MODIFIED:** Filter ONLY for 'wallpaper-roll' category
+        // Filter ONLY for 'wallpaper-roll' category
         const wallpaperRolls = data.filter((p: any): p is Product => {
           const category = (p?.category || '').toString().toLowerCase().trim();
           return category === 'wallpaper-roll'; // Only check category
@@ -115,7 +114,6 @@ const WallRollPage: React.FC = () => {
   }, []); // Run only once
 
   // --- URL Search Term Effect ---
-  // ... (Keep original logic) ...
    useEffect(() => {
     const params = new URLSearchParams(location.search);
     const q = params.get('search') || '';
@@ -155,12 +153,44 @@ const WallRollPage: React.FC = () => {
     // 3. Apply Sorting
     const sorted = [...workingList];
     switch (sortBy) {
-        case 'price-low': sorted.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)); break;
-        case 'price-high': sorted.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity)); break;
-        case 'newest': sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '') || (b.skuId || '').localeCompare(a.skuId || '')); break;
-        case 'alphabetical': sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '')); break;
+        case 'price-low': 
+            sorted.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)); 
+            break;
+        case 'price-high': 
+            sorted.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity)); 
+            break;
+        case 'newest': 
+            sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '') || (b.skuId || '').localeCompare(a.skuId || '')); 
+            break;
+        case 'alphabetical': 
+            sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '')); 
+            break;
         case 'popularity':
-        default: sorted.sort((a, b) => (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0) || (a.skuId || '').localeCompare(b.skuId || ''));
+        default: 
+             // --- SEQUENCE SORTING LOGIC ---
+             sorted.sort((a, b) => {
+                const seqA = a.sequence;
+                const seqB = b.sequence;
+
+                // Check if sequence is a valid string
+                const hasSeqA = seqA && typeof seqA === 'string' && seqA.trim().length > 0;
+                const hasSeqB = seqB && typeof seqB === 'string' && seqB.trim().length > 0;
+
+                // 1. Both have sequence -> Sort numerically (treating strings as numbers)
+                if (hasSeqA && hasSeqB) {
+                    return seqA!.localeCompare(seqB!, undefined, { numeric: true, sensitivity: 'base' });
+                }
+
+                // 2. Only A has sequence -> A comes first
+                if (hasSeqA) return -1;
+
+                // 3. Only B has sequence -> B comes first
+                if (hasSeqB) return 1;
+
+                // 4. Neither has sequence -> Fallback to Bestseller then SKU
+                return (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0) || (a.skuId || '').localeCompare(b.skuId || '');
+            });
+            break;
     }
     return sorted;
   }, [filters, sortBy, products, searchTerm, sidebarSearch]);
@@ -449,7 +479,8 @@ const WallRollPage: React.FC = () => {
                  </div>
             )}
          </AnimatePresence>
-<ReviewSection/>
+<ReviewSection   productId={products._id || products.id} 
+    productName={products.name}/>
       </div>
     </>
   );

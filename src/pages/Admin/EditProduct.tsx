@@ -241,7 +241,7 @@ const handleVariantChange = (
       console.log("Product updated successfully:", updatedProductResult);
       setInitialProduct(product); // Update baseline for future comparisons
       alert("Product updated successfully!");
-      navigate('/admin/adminproducts'); // Navigate back to product list on success
+      navigate('/admin/dashboard'); // Navigate back to product list on success
 
     } catch (err: any) {
       console.error("Error updating product:", err);
@@ -358,8 +358,18 @@ const handleVariantChange = (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-                <input type="text" name="name" id="name" value={product.name || ''} onChange={handleChange} required className="mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" />
+                <input type="text" name="sequence" id="sequence" value={product.name || ''} onChange={handleChange} required className="mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" />
               </div>
+
+
+{/*______SEQUENCE NUMBER Updation for prodcuts______*/}
+              <div>
+                <label htmlFor="sequence" className="block text-sm font-medium text-gray-700">Sequence</label>
+                <input type="text" name="sequence" id="sequence" value={product.sequence || ''} onChange={handleChange} required className="mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" />
+              </div>
+{/*________________________________*/}
+
+
               <div>
                 <label htmlFor="skuId" className="block text-sm font-medium text-gray-700">SKU</label>
                 <input type="text" name="skuId" id="skuId" value={product.skuId || ''} onChange={handleChange} required className="mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" />
@@ -385,6 +395,10 @@ const handleVariantChange = (
                  </div>
              </div>
           </fieldset>
+
+
+
+          
 
            {/* Category & Status Section */}
            <fieldset className="space-y-4 border-t pt-4">

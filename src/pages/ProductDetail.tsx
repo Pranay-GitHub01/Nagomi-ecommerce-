@@ -1,5 +1,5 @@
 // src/pages/ProductDetail.tsx
-import ReviewSection from '../components/Review/Review';
+import ReviewSection from '../components/Review/ReviewSection';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -335,7 +335,7 @@ const ProductDetail: React.FC = () => {
 
   // Use the image at the current index
   const mainImage = imageList[selectedImageIndex] || '/placeholder.jpg';
-  const whatsappLink = `https://wa.me/919876543210?text=I'm%20interested%20in%20${encodeURIComponent(product.name)}%20(ID%3A%20${product._id || product.id}).%20My%20wall%20is%20${wallWidth}%22 W x ${wallHeight}%22 H.`;
+  const whatsappLink = `https://wa.me/918588825148?text=I'm%20interested%20in%20${encodeURIComponent(product.name)}%20(ID%3A%20${product._id || product.id}).%20My%20wall%20is%20${wallWidth}%22 W x ${wallHeight}%22 H.`;
 
 
   return (
@@ -684,7 +684,8 @@ const ProductDetail: React.FC = () => {
            {/* Recently Viewed */}
             {/* ... placeholder ... */}
            {/* Reviews Section */}
-<ReviewSection/>
+<ReviewSection   productId={product._id || product.id} 
+    productName={product.name}/>
             {/* ... placeholder ... */}
 
 

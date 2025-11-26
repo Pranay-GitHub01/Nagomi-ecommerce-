@@ -23,3 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+#added git.zip to ignore the zip file created during git archive command
+dist.zip
+public/videos/*.mp4
+
+# Public assets (ignore videos folder)
+public/videos/*
+public/wall_art/*
+public/images/*

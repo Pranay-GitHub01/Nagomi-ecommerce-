@@ -1,90 +1,74 @@
+// 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import ProductCard from '../components/Product/ProductCard'; // Ensure this path is correct
 import { FilterOptions, Product } from '../types'; // Ensure Product type is defined correctly
 import { API_BASE_URL } from '../api/config';
-// CORRECTED IMPORT: Added Link
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react'; // Import ChevronDown
+import { ChevronDown } from 'lucide-react';
 
 const PRODUCTS_PER_PAGE = 21;
 
 // --- Helper Function to Get Image Source ---
-// Determines the best image source URL for a product, prioritizing product.images[0]
 const getDisplayImageSrc = (product: Product): string => {
-  // 1. Prioritize the first image from the product's images array if it exists and is valid
   if (Array.isArray(product.images) && product.images.length > 0 && product.images[0]) {
     const imageUrl = product.images[0];
-    // Simple check if it's already a usable URL (absolute or root-relative)
     if (imageUrl.startsWith('http') || imageUrl.startsWith('/')) {
       return imageUrl;
     }
-    // If it's potentially just a filename or relative path segment, construct the path
     const parts = imageUrl.split(/[\\/]/);
     const filename = parts.pop() || imageUrl;
     const categoryFolder = product.category?.toLowerCase().includes('roll') ? 'wallpaper_roll' :
                            product.category?.toLowerCase().includes('art') ? 'wall_art' : 'wallpaper';
 
-    // If the path seems to already include the category structure, use it directly
     if (imageUrl.includes(categoryFolder)) {
-        // Assuming path might be like 'wallpaper/WP_001/1-001-WP.png'
         return `/images/${imageUrl}`;
     }
 
-    // Attempt to construct path using SKU subfolder convention
     const skuId = product.skuId || '';
     if (skuId && (filename.includes(skuId) || filename.includes(skuId.replace('-WP','')))) {
-       // e.g., /images/wallpaper/WP_001/1-001-WP.png or similar variations
-       // Check if SKU is already in the filename path segments provided
-       if (imageUrl.includes(skuId)) { // If path already contains SKU (e.g., SKU/filename)
-         return `/images/${categoryFolder}/${imageUrl}`; // Path might be SKU/filename.ext
+       if (imageUrl.includes(skuId)) {
+         return `/images/${categoryFolder}/${imageUrl}`;
        }
-       // Construct path assuming SKU is the folder name
        return `/images/${categoryFolder}/${skuId}/${filename}`;
     }
-    // General fallback within the category folder
     return `/images/${categoryFolder}/${filename}`;
   }
-  // Ultimate fallback
   return '/placeholder.jpg';
 };
-// --- End Helper Function ---
 
-// Type for products including the generated image source
 interface ProductWithImage extends Product {
   displayImageSrc: string;
 }
 
 const Products: React.FC = () => {
-  const [products, setProducts] = useState<ProductWithImage[]>([]); // State holds only processed wallpapers
-  const [allCategories, setAllCategories] = useState<string[]>(['All', 'Wallpaper']); // Simplified categories
+  const [products, setProducts] = useState<ProductWithImage[]>([]); 
+  const [allCategories, setAllCategories] = useState<string[]>(['All', 'Wallpaper']); 
   const [colors, setColors] = useState<string[]>([]);
-  const rooms = ['Living Room', 'Bedroom', 'Pooja room', 'Kids room', 'Office']; // Available room filters
+  const rooms = ['Living Room', 'Bedroom', 'Pooja room', 'Kids room', 'Office']; 
 
   const [openSections, setOpenSections] = useState({
-    type: true,  // Theme filter section open by default
-    colour: true, // Color filter section open by default
-    room: true   // Room filter section open by default
+    type: true,  
+    colour: true, 
+    room: true   
   });
 
   const [sortBy, setSortBy] = useState<'popularity' | 'price-low' | 'price-high' | 'newest' | 'alphabetical' | ''>('popularity');
   const [filters, setFilters] = useState<FilterOptions>({
-    // Category filter might become less relevant if only wallpapers are shown,
-    // but keep for structure if needed for 'All' vs specific sub-types later
     category: 'All',
-    priceRange: [0, 200], // Example price range
+    priceRange: [0, 200], 
     colors: [],
     roomTypes: []
   });
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
-  // Available theme filters (ensure 'Minimalist' is removed if not desired)
   const themes = ['Tropical', 'Indian', 'Modern', 'Kids', '3D', 'Global Destinations', 'Ceiling'];
   const [currentPage, setCurrentPage] = useState(1);
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState(''); // Search term from URL
-  const [sidebarSearch, setSidebarSearch] = useState(''); // Search term from Sidebar Input
+  const [searchTerm, setSearchTerm] = useState(''); 
+  const [sidebarSearch, setSidebarSearch] = useState(''); 
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [isMobileSortOpen, setIsMobileSortOpen] = useState(false);
 
@@ -99,16 +83,16 @@ const Products: React.FC = () => {
         const wallpaperProducts = allProducts.filter((p: any): p is Product => {
             const rawCat = p?.category;
             const normalizedCat = typeof rawCat === 'string' ? rawCat.toLowerCase().trim() : '';
-            return normalizedCat === 'wallpaper'; // Keep only products explicitly categorized as 'wallpaper'
+            return normalizedCat === 'wallpaper'; 
         });
 
-        // 2. Generate displayImageSrc for each wallpaper
+        // 2. Generate displayImageSrc
         const wallpapersWithImageSrc = wallpaperProducts.map((product): ProductWithImage => {
-            const displayImageSrc = getDisplayImageSrc(product);
-            return {
-              ...product,
-              displayImageSrc
-            };
+           const displayImageSrc = getDisplayImageSrc(product);
+           return {
+             ...product,
+             displayImageSrc,
+           };
         });
 
         // 3. Enrich with Room Types
@@ -123,10 +107,10 @@ const Products: React.FC = () => {
            // Use existing roomTypes if valid and specific, otherwise infer
            const existingRooms = (Array.isArray(p.roomTypes) ? p.roomTypes : [])
              .map(normalize)
-             .filter(r => rooms.map(br => br.toLowerCase()).includes(r)); // Filter against known valid rooms
+             .filter(r => rooms.map(br => br.toLowerCase()).includes(r)); 
 
            if (existingRooms.length > 0) {
-              return { ...p, roomTypes: existingRooms }; // Use existing valid rooms
+              return { ...p, roomTypes: existingRooms }; 
            }
 
            // Infer if no valid existing rooms
@@ -141,45 +125,42 @@ const Products: React.FC = () => {
            if (includesAny(text, poojaKeywords) || theme === 'indian') inferredRooms.push('Pooja room');
            if (includesAny(text, officeKeywords) || ['modern', '3d', 'abstract', 'geometric'].includes(theme)) inferredRooms.push('Office');
 
-           // Add general rooms if suitable or no specific room found yet
            if (inferredRooms.length === 0 || ['tropical', 'modern', 'global destinations', '3d'].includes(theme) || inferredRooms.includes('Office') ) {
                if (!inferredRooms.includes('Living Room')) inferredRooms.push('Living Room');
                if (!inferredRooms.includes('Bedroom')) inferredRooms.push('Bedroom');
            }
 
            const finalRooms = Array.from(new Set(inferredRooms));
-           return { ...p, roomTypes: finalRooms.length > 0 ? finalRooms : ['Living Room', 'Bedroom'] }; // Default if empty
+           return { ...p, roomTypes: finalRooms.length > 0 ? finalRooms : ['Living Room', 'Bedroom'] }; 
         });
 
-        setProducts(enrichedWallpapers); // Set the final list of processed wallpapers
+        setProducts(enrichedWallpapers); 
       })
       .catch(err => console.error('Error fetching or processing products:', err));
 
-    // Fetch and set colors (no change needed here)
     fetch(`${API_BASE_URL}/api/meta/colors`)
       .then(r => r.json())
       .then(data => setColors(Array.isArray(data) ? data : []))
       .catch(err => console.error('Error fetching colors:', err));
 
-    // Categories are now simplified
     setAllCategories(['All', 'Wallpaper']);
 
-  }, []); // Run only once on mount
+  }, []); 
 
- // Effect to handle URL parameters (search) - Category param is less relevant now
+ // Effect to handle URL parameters (search)
  useEffect(() => {
     const params = new URLSearchParams(location.search);
     const q = params.get('search') || '';
-    setSearchTerm(q); // Set search term based on URL
-    setCurrentPage(1); // Reset page when search term changes
+    setSearchTerm(q); 
+    setCurrentPage(1); 
   }, [location.search]);
 
 
   // --- Filtering and Sorting Logic (useMemo) ---
   const filteredProducts = useMemo(() => {
-    let listToFilter = products; // Start with the processed wallpapers from state
+    let listToFilter = products; 
 
-    // 1. Filter by Search Term (Sidebar search takes priority)
+    // 1. Filter by Search Term 
     const currentSearch = sidebarSearch.trim() ? sidebarSearch.trim().toLowerCase() : searchTerm.trim().toLowerCase();
     if (currentSearch) {
       listToFilter = listToFilter.filter(product =>
@@ -231,12 +212,34 @@ const Products: React.FC = () => {
          break;
        case 'popularity':
        default:
-         sortedList.sort((a, b) => (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0) || (a.skuId || '').localeCompare(b.skuId || ''));
+          // --- FIXED SORTING LOGIC HERE ---
+         sortedList.sort((a, b) => {
+            const seqA = a.sequence;
+            const seqB = b.sequence;
+
+            // Check if sequence is a valid string
+            const hasSeqA = seqA && typeof seqA === 'string' && seqA.trim().length > 0;
+            const hasSeqB = seqB && typeof seqB === 'string' && seqB.trim().length > 0;
+
+            // 1. Both have sequence -> Sort numerically (treating strings as numbers)
+            if (hasSeqA && hasSeqB) {
+              return seqA.localeCompare(seqB, undefined, { numeric: true, sensitivity: 'base' });
+            }
+
+            // 2. Only A has sequence -> A comes first
+            if (hasSeqA) return -1;
+
+            // 3. Only B has sequence -> B comes first
+            if (hasSeqB) return 1;
+
+            // 4. Neither has sequence -> Fallback to Bestseller then SKU
+            return (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0) || (a.skuId || '').localeCompare(b.skuId || '');
+         });
          break;
      }
     return sortedList;
 
-  }, [products, filters, sortBy, searchTerm, sidebarSearch, selectedThemes]); // Dependencies
+  }, [products, filters, sortBy, searchTerm, sidebarSearch, selectedThemes]); 
 
 
   // --- Pagination Logic ---
@@ -288,7 +291,6 @@ const Products: React.FC = () => {
        setSelectedThemes([]);
        setSidebarSearch('');
        setSearchTerm('');
-       // Clear only the search param from URL if present
        const params = new URLSearchParams(location.search);
        if (params.has('search')) {
             params.delete('search');

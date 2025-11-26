@@ -36,7 +36,9 @@ const Footer: React.FC = () => {
                 <ul className="space-y-2 font-medium">
                   <li><a href="/" className="hover:text-blue-700 hover:underline transition">Home Page</a></li>
                   <li><a href="/wallpapers" className="hover:text-blue-700 hover:underline transition">Wallpapers</a></li>
-                  <li><a href="/wallart" className="hover:text-blue-700 hover:underline transition">Wall Art</a></li>
+                  {/* <li><a href="/wallart" className="hover:text-blue-700 hover:underline transition">Wall Art</a></li> */}
+                   <li><a href="/peelnstick" className="hover:text-blue-700 hover:underline transition">Peel-n-Stick</a></li>
+                  <li><a href="/luxe" className="hover:text-blue-700 hover:underline transition">Luxe </a></li>
                   <li><a href="/custom-design" className="hover:text-blue-700 hover:underline transition">Custom Design</a></li>
                   <li><a href="/about" className="hover:text-blue-700 hover:underline transition">About Us</a></li>
                 </ul>

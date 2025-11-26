@@ -1,3 +1,4 @@
+// 
 // src/pages/WallArtPage.tsx
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -123,7 +124,7 @@ const WallArtPage: React.FC = () => {
                     return { ...item, displayImageSrc: displaySrc };
                 });
 
-                console.log("Wall Art Items with displayImageSrc:", itemsWithDisplaySrc);
+                // console.log("Wall Art Items with displayImageSrc:", itemsWithDisplaySrc);
                 setWallArtItems(itemsWithDisplaySrc.length > 0 ? itemsWithDisplaySrc : []);
                 setIsLoading(false);
             })
@@ -195,12 +196,44 @@ const WallArtPage: React.FC = () => {
         // 5. Apply Sorting
         const sorted = [...workingList];
         switch (sortBy) {
-            case 'price-low': sorted.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)); break;
-            case 'price-high': sorted.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity)); break;
-            case 'newest': sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '') || (b.skuId || '').localeCompare(a.skuId || '')); break; // Use createdAt if available
-            case 'alphabetical': sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '')); break;
+            case 'price-low': 
+                sorted.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)); 
+                break;
+            case 'price-high': 
+                sorted.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity)); 
+                break;
+            case 'newest': 
+                sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '') || (b.skuId || '').localeCompare(a.skuId || '')); 
+                break; 
+            case 'alphabetical': 
+                sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '')); 
+                break;
             case 'popularity':
-            default: sorted.sort((a, b) => (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0) || (a.skuId || '').localeCompare(b.skuId || '')); // Sort by bestseller status first
+            default: 
+                 // --- SEQUENCE SORTING LOGIC ---
+                 sorted.sort((a, b) => {
+                    const seqA = a.sequence;
+                    const seqB = b.sequence;
+
+                    // Check if sequence is a valid string
+                    const hasSeqA = seqA && typeof seqA === 'string' && seqA.trim().length > 0;
+                    const hasSeqB = seqB && typeof seqB === 'string' && seqB.trim().length > 0;
+
+                    // 1. Both have sequence -> Sort numerically (treating strings as numbers)
+                    if (hasSeqA && hasSeqB) {
+                        return seqA!.localeCompare(seqB!, undefined, { numeric: true, sensitivity: 'base' });
+                    }
+
+                    // 2. Only A has sequence -> A comes first
+                    if (hasSeqA) return -1;
+
+                    // 3. Only B has sequence -> B comes first
+                    if (hasSeqB) return 1;
+
+                    // 4. Neither has sequence -> Fallback to Bestseller then SKU
+                    return (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0) || (a.skuId || '').localeCompare(b.skuId || '');
+                });
+                break;
         }
 
         return sorted;

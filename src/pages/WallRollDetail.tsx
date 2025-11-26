@@ -24,6 +24,7 @@ import { API_BASE_URL } from '../api/config'; // Adjust path
 import { Product } from '../types'; // Adjust path
 import { useAuthStore } from '../stores/useAuthStore'; // Adjust path
 import { FaWhatsapp } from 'react-icons/fa';
+import ReviewSection from '../components/Review/ReviewSection';
 
 // --- Modals ---
 // Simple Support Modal
@@ -425,7 +426,7 @@ const WallRollDetail: React.FC = () => {
 
           {/* --- Lower Sections --- */}
           {/* ... (Keep Description, Related Products, FAQ, etc.) ... */}
-           <div className="mt-16 pt-8 border-t border-gray-200">
+           {/* <div className="mt-16 pt-8 border-t border-gray-200">
                  <h2 className="text-2xl font-semibold text-[#172b9b] mb-4 font-seasons">Product Details</h2>
                  <div className="prose prose-sm max-w-none text-gray-600 font-lora">
                      <p>{product.description || 'No description available.'}</p>
@@ -434,15 +435,16 @@ const WallRollDetail: React.FC = () => {
                      {product.skuId && <p><strong>SKU:</strong> {product.skuId}</p>}
                      {product.materials && product.materials.length > 0 && ( <p><strong>Materials:</strong> {product.materials.join(', ')}</p> )}
                  </div>
-             </div>
-           {relatedProducts.length > 0 && (
+             </div> */}
+           {/* {relatedProducts.length > 0 && (
              <div className="mt-16 pt-8 border-t border-gray-200">
                 <h2 className="text-2xl font-semibold text-[#172b9b] mb-6 font-seasons text-center"> You Might Also Like </h2>
                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                  {relatedProducts.map(relProd => ( <ProductCard key={relProd._id || relProd.id} product={relProd} /> ))}
                </div>
              </div>
-           )}
+           )} */}
+           
              <div className="mt-16 pt-8 border-t border-gray-200 max-w-3xl mx-auto">
              <h2 className="text-2xl font-semibold text-[#172b9b] mb-6 font-seasons text-center"> Frequently Asked Questions </h2>
              <div className="divide-y divide-gray-200 border border-gray-200 rounded-lg shadow-sm bg-white">
@@ -460,6 +462,7 @@ const WallRollDetail: React.FC = () => {
                ))}
              </div>
            </div>
+           <ReviewSection/>
 
 
         </div>

@@ -156,56 +156,56 @@ export default function Home() {
       name: "Aarav Mehta",
       review:
         "The transformation was magical! My living room feels like a luxury hotel now. Highly recommend Nagomi for anyone looking to elevate their space.",
-      image: "https://randomuser.me/api/portraits/men/32.jpg",
+      image: "/reviews/abhishek yadav/unnamed.webp",
       stars: 5,
     },
     {
       name: "Saanvi Sharma",
       review:
         "Absolutely in love with the Signature Art collection. The quality and detail are unmatched. The team was so helpful throughout the process!",
-      image: "https://randomuser.me/api/portraits/women/44.jpg",
+      image: "/reviews/abhishek yadav/unnamed.webp",
       stars: 5,
     },
     {
       name: "Kabir Singh",
       review:
         "From consultation to installation, everything was seamless. The Designer Walls are a conversation starter for every guest!",
-      image: "https://randomuser.me/api/portraits/men/65.jpg",
+      image: "/reviews/abhishek yadav/unnamed.webp",
       stars: 5,
     },
     {
       name: "Mira Kapoor",
       review:
         "Nagomi turned my bedroom into a tranquil retreat. The muralists are true artists. I wake up inspired every day!",
-      image: "https://randomuser.me/api/portraits/women/68.jpg",
+      image: "/reviews/abhishek yadav/unnamed.webp",
       stars: 5,
     },
     {
       name: "Riya Patel",
       review:
         "The Premium Wallpapers collection exceeded all expectations. The texture and colors are absolutely stunning. My dining room is now the highlight of my home!",
-      image: "https://randomuser.me/api/portraits/women/23.jpg",
+      image: "/reviews/abhishek yadav/unnamed.webp",
       stars: 5,
     },
     {
       name: "Vikram Malhotra",
       review:
         "Professional service from start to finish. The installation team was punctual, skilled, and left my space spotless. The wall mural is breathtaking!",
-      image: "https://randomuser.me/api/portraits/men/45.jpg",
+      image: "/reviews/abhishek yadav/unnamed.webp",
       stars: 5,
     },
     {
       name: "Priya Gupta",
       review:
         "I was skeptical about wall murals, but Nagomi proved me wrong. The quality is exceptional and the design perfectly matches my aesthetic. Love it!",
-      image: "https://randomuser.me/api/portraits/women/67.jpg",
+      image: "/reviews/abhishek yadav/unnamed.webp",
       stars: 5,
     },
     {
       name: "Arjun Reddy",
       review:
         "The custom design service is incredible. They took my vision and made it reality. The attention to detail is remarkable. Worth every penny!",
-      image: "https://randomuser.me/api/portraits/men/89.jpg",
+      image: "/reviews/abhishek yadav/unnamed.webp",
       stars: 5,
     },
   ];
@@ -501,7 +501,7 @@ export default function Home() {
                           : cat.name === "Wallpaper Rolls"
                           ? "/wallroll"
                           : cat.name === "Peel & Stick "
-                          ? "/peelnstick"
+                          ? "/peel-n-stick"
                           : cat.name === "Luxe Collections"
                           ? "/luxe"
                           : `/wallpapers?category=${encodeURIComponent(
@@ -578,7 +578,7 @@ export default function Home() {
                                       )}
                                       <div className="absolute inset-0 flex items-center justify-center">
                                         {" "}
-                                        <div className="w-16 h-16 bg-white/80 rounded-full flex items-center justify-center shadow-lg">
+                                        {/* <div className="w-16 h-16 bg-white/80 rounded-full flex items-center justify-center shadow-lg">
                                           {" "}
                                           <svg
                                             className="w-8 h-8 text-blue-600 ml-1"
@@ -588,7 +588,7 @@ export default function Home() {
                                             {" "}
                                             <path d="M8 5v14l11-7z" />{" "}
                                           </svg>{" "}
-                                        </div>{" "}
+                                        </div>{" "} */}
                                       </div>
                                       <img
                                         src={

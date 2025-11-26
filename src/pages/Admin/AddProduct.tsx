@@ -60,7 +60,6 @@
 //   ).optional().default([]), // Default variants to empty array
 // });
 
-
 // // Array Input Component (Helper for Tags, Colors, etc.)
 // const ArrayInput: React.FC<{
 //   label: string;
@@ -142,7 +141,6 @@
 //     </div>
 //   );
 // };
-
 
 // const AddProduct: React.FC = () => {
 //   const navigate = useNavigate();
@@ -249,7 +247,6 @@
 //     setValue("images", updatedImages, { shouldValidate: true });
 //   };
 
-
 //   // --- Submit Handler ---
 //   const onSubmit = async (data: ProductFormData) => {
 //     setSubmitError(null); // Clear previous errors
@@ -305,7 +302,6 @@
 //     }
 //   };
 
-
 //   // --- Input Styling ---
 //   const getInputClasses = (field: keyof ProductFormData | 'tags' | string) => // Allow generic string for dynamic fields
 //     `block w-full rounded-md border px-3 py-2 shadow-sm sm:text-sm
@@ -318,7 +314,6 @@
 
 //   const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
 //   const errorClasses = "mt-1 text-sm text-red-600";
-
 
 //   return (
 //     <>
@@ -543,6 +538,7 @@ import { Product } from "../../types";
 // Interface for form data
 interface ProductFormData {
   skuId: string;
+  sequence: string; // Optional sequenceId
   name: string;
   description: string;
   category: string;
@@ -563,18 +559,30 @@ interface ProductFormData {
 
     id: string; // <-- ADD THIS
     color: string; // <-- ADD THIS
-
   }>;
 }
 
 // Updated Schema
 const schema = yup.object({
   skuId: yup.string().required("SKU ID is required"),
+  sequence: yup
+    .string()
+    .typeError("Sequence must be a number")
+    .required("Sequence is required"),
   name: yup.string().required("Product name is required"),
   description: yup.string().required("Description is required"),
   category: yup.string().required("Category is required"),
-  price: yup.number().typeError("Price must be a number").positive("Price must be positive").required("Price is required"),
-  originalPrice: yup.number().typeError("Original Price must be a number").positive("Original Price must be positive").nullable().optional(),
+  price: yup
+    .number()
+    .typeError("Price must be a number")
+    .positive("Price must be positive")
+    .required("Price is required"),
+  originalPrice: yup
+    .number()
+    .typeError("Original Price must be a number")
+    .positive("Original Price must be positive")
+    .nullable()
+    .optional(),
   inStock: yup.boolean().default(true),
   bestseller: yup.boolean().default(false),
   tags: yup.array().of(yup.string().required()).optional().default([]),
@@ -582,9 +590,11 @@ const schema = yup.object({
   materials: yup.array().of(yup.string().required()).optional().default([]),
   roomTypes: yup.array().of(yup.string().required()).optional().default([]),
   // images: yup.array()... // Removed images validation
-// ...
-  variants: yup.array().of(
-    yup.object({
+  // ...
+  variants: yup
+    .array()
+    .of(
+      yup.object({
         images: yup.array().of(yup.string().required()).optional(),
 
         // --- UPDATED FIELDS START HERE ---
@@ -592,41 +602,56 @@ const schema = yup.object({
         id: yup.string().required("Variant ID is required"),
         color: yup.string().required("Variant color is required"),
 
+        size: yup
+          .array()
+          .of(yup.string().required())
+          .transform((value, originalValue) => {
+            if (typeof originalValue === "string") {
+              // Split the string by comma, trim whitespace, and filter out empty strings
+              return originalValue
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+            }
+            return value; // Return the value as-is if it's not a string
+          })
+          .min(1, "Variant size is required"),
 
-        size: yup.array().of(yup.string().required())
-            .transform((value, originalValue) => {
-              if (typeof originalValue === 'string') {
-                // Split the string by comma, trim whitespace, and filter out empty strings
-                return originalValue.split(',').map(s => s.trim()).filter(Boolean);
-              }
-              return value; // Return the value as-is if it's not a string
-            })
-            .min(1, "Variant size is required"),
+        mrp: yup
+          .array()
+          .of(yup.string().required())
+          .transform((value, originalValue) => {
+            if (typeof originalValue === "string") {
+              return originalValue
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+            }
+            return value;
+          })
+          .min(1, "Variant MRP is required"),
 
-        mrp: yup.array().of(yup.string().required())
-            .transform((value, originalValue) => {
-              if (typeof originalValue === 'string') {
-                return originalValue.split(',').map(s => s.trim()).filter(Boolean);
-              }
-              return value;
-            })
-            .min(1, "Variant MRP is required"),
+        sellingPrice: yup
+          .array()
+          .of(yup.string().required())
+          .transform((value, originalValue) => {
+            if (typeof originalValue === "string") {
+              return originalValue
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+            }
+            return value;
+          })
+          .min(1, "Variant Selling Price is required"),
 
-        sellingPrice: yup.array().of(yup.string().required())
-            .transform((value, originalValue) => {
-              if (typeof originalValue === 'string') {
-                return originalValue.split(',').map(s => s.trim()).filter(Boolean);
-              }
-              return value;
-            })
-            .min(1, "Variant Selling Price is required"),
-        
         // --- UPDATED FIELDS END HERE ---
-    })
-  ).optional().default([]),
-// ...  
+      })
+    )
+    .optional()
+    .default([]),
+  // ...
 });
-
 
 // Array Input Component (Helper for Tags, Colors, etc.)
 const ArrayInput: React.FC<{
@@ -637,7 +662,7 @@ const ArrayInput: React.FC<{
   formFieldName?: keyof ProductFormData;
   setValue?: (name: keyof ProductFormData, value: any) => void;
 }> = ({ label, items, setItems, placeholder, formFieldName, setValue }) => {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
 
   const handleAddItem = () => {
     const newItem = inputValue.trim();
@@ -647,20 +672,20 @@ const ArrayInput: React.FC<{
       if (formFieldName && setValue) {
         setValue(formFieldName, updatedItems);
       }
-      setInputValue('');
+      setInputValue("");
     }
   };
 
   const handleRemoveItem = (itemToRemove: string) => {
-    const updatedItems = items.filter(item => item !== itemToRemove);
+    const updatedItems = items.filter((item) => item !== itemToRemove);
     setItems(updatedItems);
-     if (formFieldName && setValue) {
-        setValue(formFieldName, updatedItems);
-      }
+    if (formFieldName && setValue) {
+      setValue(formFieldName, updatedItems);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleAddItem();
     }
@@ -668,7 +693,9 @@ const ArrayInput: React.FC<{
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
       <div className="flex items-center space-x-2 mb-2">
         <input
           type="text"
@@ -708,7 +735,6 @@ const ArrayInput: React.FC<{
   );
 };
 
-
 const AddProduct: React.FC = () => {
   const navigate = useNavigate();
   // State for array inputs
@@ -724,8 +750,8 @@ const AddProduct: React.FC = () => {
     "Wallpaper",
     "Wallpaper-Roll",
     "wall-art",
-  "peel-n-stick",
-  "luxe",
+    "peel-n-stick",
+    "luxe",
   ]);
 
   const {
@@ -775,41 +801,46 @@ const AddProduct: React.FC = () => {
       variants: data.variants || [],
     };
 
-     if (finalData.originalPrice === null || finalData.originalPrice === undefined || finalData.originalPrice <= 0) {
-       delete finalData.originalPrice;
-     }
+    if (
+      finalData.originalPrice === null ||
+      finalData.originalPrice === undefined ||
+      finalData.originalPrice <= 0
+    ) {
+      delete finalData.originalPrice;
+    }
 
     console.log("Submitting Product Data:", finalData);
 
     try {
       // --- UPDATED URL ---
-      const response = await fetch(`${API_BASE_URL}/api/products`, { // Removed /admin/
+      const response = await fetch(`${API_BASE_URL}/api/products`, {
+        // Removed /admin/
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(finalData),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `Request failed: ${response.statusText}` }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: `Request failed: ${response.statusText}` }));
         throw new Error(errorData.message || "Failed to add product.");
       }
 
       console.log("Product added successfully!");
       alert("Product added successfully!");
-      navigate("/admin/adminproducts");
-
+      navigate("/admin/dashboard"); 
     } catch (error: any) {
       console.error("An error occurred while submitting the product:", error);
       setSubmitError(error.message || "An unexpected error occurred.");
     }
   };
 
-
   // --- Input Styling ---
-  const getInputClasses = (field: keyof ProductFormData | 'tags' | string) =>
+  const getInputClasses = (field: keyof ProductFormData | "tags" | string) =>
     `block w-full rounded-md border px-3 py-2 shadow-sm sm:text-sm
      focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
      ${
@@ -821,38 +852,59 @@ const AddProduct: React.FC = () => {
   const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
   const errorClasses = "mt-1 text-sm text-red-600";
 
-
   return (
     <>
-      <Helmet> <title>Add New Product</title> </Helmet>
-
+      <Helmet>
+        {" "}
+        <title>Add New Product</title>{" "}
+      </Helmet>
       <form onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
-
         {/* Header Bar (Sticky) */}
         <div className="flex-shrink-0 sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center gap-4">
-                <button type="button" onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900" >
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+                >
                   <ArrowLeft size={16} /> Back
                 </button>
-                <h1 className="text-xl font-semibold text-gray-900"> Add New Product </h1>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {" "}
+                  Add New Product{" "}
+                </h1>
               </div>
               <button
                 type="submit"
                 disabled={isSubmitting} // Removed 'uploading' from disabled check
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? ( <> <Loader2 size={16} className="animate-spin" /> Saving... </> ) : ( <> <Save size={16} /> Save Product </> )}
+                {isSubmitting ? (
+                  <>
+                    {" "}
+                    <Loader2
+                      size={16}
+                      className="animate-spin"
+                    /> Saving...{" "}
+                  </>
+                ) : (
+                  <>
+                    {" "}
+                    <Save size={16} /> Save Product{" "}
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
-
         {/* SCROLLABLE CONTENT AREA */}
         <div className="flex-1 overflow-y-auto bg-gray-100">
           <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
             className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8"
           >
             {/* Display Submit Error */}
@@ -861,170 +913,358 @@ const AddProduct: React.FC = () => {
                 <strong>Error:</strong> {submitError}
               </div>
             )}
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main Column */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Card: Core Details */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                   <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4"> Core Details </h2>
-                   <div className="space-y-4">
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <div>
-                         <label htmlFor="skuId" className={labelClasses}> SKU ID </label>
-                         <input id="skuId" {...register("skuId")} className={getInputClasses("skuId")} />
-                         <p className={errorClasses}>{errors.skuId?.message}</p>
-                       </div>
-                       <div>
-                         <label htmlFor="name" className={labelClasses}> Product Name </label>
-                         <input id="name" {...register("name")} className={getInputClasses("name")} />
-                         <p className={errorClasses}>{errors.name?.message}</p>
-                       </div>
-                     </div>
-                     <div>
-                       <label htmlFor="description" className={labelClasses}> Description </label>
-                       <textarea id="description" {...register("description")} rows={4} className={getInputClasses("description")} />
-                       <p className={errorClasses}> {errors.description?.message} </p>
-                     </div>
-                   </div>
+                  <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                    {" "}
+                    Core Details{" "}
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="skuId" className={labelClasses}>
+                          {" "}
+                          SKU ID{" "}
+                        </label>
+                        <input
+                          id="skuId"
+                          {...register("skuId")}
+                          className={getInputClasses("skuId")}
+                        />
+                        <p className={errorClasses}>{errors.skuId?.message}</p>
+                      </div>
+
+                      {/*___________SEQUENCE number addition for products__________*/}
+                      <div>
+                        <label htmlFor="sequence" className={labelClasses}>
+                          Sequence
+                        </label>
+                        <input
+                          id="sequence"
+                          type="text" // 1. Enforce number input in browser
+                          {...register("sequence", { valueAsNumber: true })} // 2. Ensure React treats it as number
+                          className={getInputClasses("sequence")}
+                        />
+                        <p className={errorClasses}>
+                          {errors.sequence?.message}
+                        </p>
+                      </div>
+                      {/*___________SEQUENCE number addition for products__________*/}
+
+                      <div>
+                        <label htmlFor="name" className={labelClasses}>
+                          {" "}
+                          Product Name{" "}
+                        </label>
+                        <input
+                          id="name"
+                          {...register("name")}
+                          className={getInputClasses("name")}
+                        />
+                        <p className={errorClasses}>{errors.name?.message}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="description" className={labelClasses}>
+                        {" "}
+                        Description{" "}
+                      </label>
+                      <textarea
+                        id="description"
+                        {...register("description")}
+                        rows={4}
+                        className={getInputClasses("description")}
+                      />
+                      <p className={errorClasses}>
+                        {" "}
+                        {errors.description?.message}{" "}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Card: Media (Removed) */}
 
-                 {/* Card: Variants (Conditionally Rendered) */}
-                 {(selectedCategory ==="wall-art" || selectedCategory ==="peel-n-stick" ||selectedCategory === "luxe" )&& (
-                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                         <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-                           Variants (Size & Price)
-                         </h2>
-                        <div className="space-y-4 border p-4 rounded-md">
-                             <h3 className="text-md font-medium text-gray-700">Variant 1</h3>
-                             
-                             {/* --- ADD THIS GRID --- */}
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                   <label htmlFor="variants.0.id" className={labelClasses}> Variant ID (SKU) </label>
-                                   <input
-                                       id="variants.0.id"
-                                       {...register("variants.0.id")}
-                                       placeholder="e.g., WA-ART-001A"
-                                       className={getInputClasses(`variants.0.id`)}
-                                   />
-                                   {errors.variants?.[0]?.id && <p className={errorClasses}>{errors.variants[0].id.message}</p>}
-                                </div>
-                                <div>
-                                   <label htmlFor="variants.0.color" className={labelClasses}> Variant Color </label>
-                                   <input
-                                       id="variants.0.color"
-                                       {...register("variants.0.color")}
-                                       placeholder="e.g., Rustic Brown"
-                                       className={getInputClasses(`variants.0.color`)}
-                                   />
-                                   {errors.variants?.[0]?.color && <p className={errorClasses}>{errors.variants[0].color.message}</p>}
-                                </div>
-                             </div>
-                             {/* --- END OF ADDED GRID --- */}
+                {/* Card: Variants (Conditionally Rendered) */}
+                {(selectedCategory === "wall-art" ||
+                  selectedCategory === "peel-n-stick" ||
+                  selectedCategory === "luxe") && (
+                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                      Variants (Size & Price)
+                    </h2>
+                    <div className="space-y-4 border p-4 rounded-md">
+                      <h3 className="text-md font-medium text-gray-700">
+                        Variant 1
+                      </h3>
 
-                              <div>
-                                 <label htmlFor="variants.0.size" className={labelClasses}> Size(s) (comma-separated)</label>
-                                 <input
-                                     id="variants.0.size"
-                                     {...register("variants.0.size")}
-                                     placeholder="e.g., 3x2 feet, 6x3 feet"
-                                     className={getInputClasses(`variants.0.size`)}
-                                 />
-                                  {errors.variants?.[0]?.size && <p className={errorClasses}>{errors.variants[0].size.message}</p>}
-                             </div>
-                             <div>
-                                 <label htmlFor="variants.0.mrp" className={labelClasses}> MRP(s) (comma-separated, match size order)</label>
-                                 <input
-                                     id="variants.0.mrp"
-                                     {...register("variants.0.mrp")}
-                                     placeholder="e.g., ₹17000.00, ₹40000.00"
-                                     className={getInputClasses(`variants.0.mrp`)}
-                                 />
-                                 {errors.variants?.[0]?.mrp && <p className={errorClasses}>{errors.variants[0].mrp.message}</p>}
-                             </div>
-                              <div>
-                                 <label htmlFor="variants.0.sellingPrice" className={labelClasses}> Selling Price(s) (comma-separated, match size order)</label>
-                                 <input
-                                     id="variants.0.sellingPrice"
-                                     {...register("variants.0.sellingPrice")}
-                                     placeholder="e.g., ₹9500.00, ₹23000.00"
-                                     className={getInputClasses(`variants.0.sellingPrice`)}
-                                 />
-                                 {errors.variants?.[0]?.sellingPrice && <p className={errorClasses}>{errors.variants[0].sellingPrice.message}</p>}
-                             </div>
-                         </div>
-                         <p className="mt-2 text-xs text-gray-500">
-                             Enter sizes and corresponding prices separated by commas. Ensure the order matches.
-                         </p>
-                     </div>
-                 )}
+                      {/* --- ADD THIS GRID --- */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            htmlFor="variants.0.id"
+                            className={labelClasses}
+                          >
+                            {" "}
+                            Variant ID (SKU){" "}
+                          </label>
+                          <input
+                            id="variants.0.id"
+                            {...register("variants.0.id")}
+                            placeholder="e.g., WA-ART-001A"
+                            className={getInputClasses(`variants.0.id`)}
+                          />
+                          {errors.variants?.[0]?.id && (
+                            <p className={errorClasses}>
+                              {errors.variants[0].id.message}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="variants.0.color"
+                            className={labelClasses}
+                          >
+                            {" "}
+                            Variant Color{" "}
+                          </label>
+                          <input
+                            id="variants.0.color"
+                            {...register("variants.0.color")}
+                            placeholder="e.g., Rustic Brown"
+                            className={getInputClasses(`variants.0.color`)}
+                          />
+                          {errors.variants?.[0]?.color && (
+                            <p className={errorClasses}>
+                              {errors.variants[0].color.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {/* --- END OF ADDED GRID --- */}
 
-              </div> {/* End Main Column */}
-
+                      <div>
+                        <label
+                          htmlFor="variants.0.size"
+                          className={labelClasses}
+                        >
+                          {" "}
+                          Size(s) (comma-separated)
+                        </label>
+                        <input
+                          id="variants.0.size"
+                          {...register("variants.0.size")}
+                          placeholder="e.g., 3x2 feet, 6x3 feet"
+                          className={getInputClasses(`variants.0.size`)}
+                        />
+                        {errors.variants?.[0]?.size && (
+                          <p className={errorClasses}>
+                            {errors.variants[0].size.message}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="variants.0.mrp"
+                          className={labelClasses}
+                        >
+                          {" "}
+                          MRP(s) (comma-separated, match size order)
+                        </label>
+                        <input
+                          id="variants.0.mrp"
+                          {...register("variants.0.mrp")}
+                          placeholder="e.g., ₹17000.00, ₹40000.00"
+                          className={getInputClasses(`variants.0.mrp`)}
+                        />
+                        {errors.variants?.[0]?.mrp && (
+                          <p className={errorClasses}>
+                            {errors.variants[0].mrp.message}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="variants.0.sellingPrice"
+                          className={labelClasses}
+                        >
+                          {" "}
+                          Selling Price(s) (comma-separated, match size order)
+                        </label>
+                        <input
+                          id="variants.0.sellingPrice"
+                          {...register("variants.0.sellingPrice")}
+                          placeholder="e.g., ₹9500.00, ₹23000.00"
+                          className={getInputClasses(`variants.0.sellingPrice`)}
+                        />
+                        {errors.variants?.[0]?.sellingPrice && (
+                          <p className={errorClasses}>
+                            {errors.variants[0].sellingPrice.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">
+                      Enter sizes and corresponding prices separated by commas.
+                      Ensure the order matches.
+                    </p>
+                  </div>
+                )}
+              </div>{" "}
+              {/* End Main Column */}
               {/* Sidebar Column */}
               <div className="lg:col-span-1 space-y-6">
                 {/* Card: Status */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                   <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4"> Status </h2>
-                   <div className="space-y-4">
-                     <label className="flex items-center justify-between"> <span className="text-sm font-medium text-gray-700"> In Stock </span> <input type="checkbox" {...register("inStock")} className="rounded h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" /> </label>
-                     <label className="flex items-center justify-between"> <span className="text-sm font-medium text-gray-700"> Bestseller </span> <input type="checkbox" {...register("bestseller")} className="rounded h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" /> </label>
-                   </div>
+                  <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                    {" "}
+                    Status{" "}
+                  </h2>
+                  <div className="space-y-4">
+                    <label className="flex items-center justify-between">
+                      {" "}
+                      <span className="text-sm font-medium text-gray-700">
+                        {" "}
+                        In Stock{" "}
+                      </span>{" "}
+                      <input
+                        type="checkbox"
+                        {...register("inStock")}
+                        className="rounded h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />{" "}
+                    </label>
+                    <label className="flex items-center justify-between">
+                      {" "}
+                      <span className="text-sm font-medium text-gray-700">
+                        {" "}
+                        Bestseller{" "}
+                      </span>{" "}
+                      <input
+                        type="checkbox"
+                        {...register("bestseller")}
+                        className="rounded h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />{" "}
+                    </label>
+                  </div>
                 </div>
 
                 {/* Card: Categorization */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                   <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4"> Categorization </h2>
-                   <div className="space-y-4">
-                     <div>
-                       <label htmlFor="category" className={labelClasses}> Category </label>
-                       <select id="category" {...register("category")} className={getInputClasses("category")} >
-                         <option value="">Select Category</option>
-                         {categories.map((category) => ( <option key={category} value={category}> {category} </option> ))}
-                       </select>
-                       <p className={errorClasses}> {errors.category?.message} </p>
-                     </div>
-                     <ArrayInput
-                        label="Tags"
-                        items={tags}
-                        setItems={setTags}
-                        placeholder="Type tag and press Enter"
-                        formFieldName="tags"
-                        setValue={setValue}
-                     />
-                      <ArrayInput label="Colors" items={colors} setItems={setColors} formFieldName="colors" setValue={setValue} />
-                      <ArrayInput label="Materials" items={materials} setItems={setMaterials} formFieldName="materials" setValue={setValue} />
-                      <ArrayInput label="Room Types" items={roomTypes} setItems={setRoomTypes} formFieldName="roomTypes" setValue={setValue} />
-                   </div>
+                  <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                    {" "}
+                    Categorization{" "}
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="category" className={labelClasses}>
+                        {" "}
+                        Category{" "}
+                      </label>
+                      <select
+                        id="category"
+                        {...register("category")}
+                        className={getInputClasses("category")}
+                      >
+                        <option value="">Select Category</option>
+                        {categories.map((category) => (
+                          <option key={category} value={category}>
+                            {" "}
+                            {category}{" "}
+                          </option>
+                        ))}
+                      </select>
+                      <p className={errorClasses}>
+                        {" "}
+                        {errors.category?.message}{" "}
+                      </p>
+                    </div>
+                    <ArrayInput
+                      label="Tags"
+                      items={tags}
+                      setItems={setTags}
+                      placeholder="Type tag and press Enter"
+                      formFieldName="tags"
+                      setValue={setValue}
+                    />
+                    <ArrayInput
+                      label="Colors"
+                      items={colors}
+                      setItems={setColors}
+                      formFieldName="colors"
+                      setValue={setValue}
+                    />
+                    <ArrayInput
+                      label="Materials"
+                      items={materials}
+                      setItems={setMaterials}
+                      formFieldName="materials"
+                      setValue={setValue}
+                    />
+                    <ArrayInput
+                      label="Room Types"
+                      items={roomTypes}
+                      setItems={setRoomTypes}
+                      formFieldName="roomTypes"
+                      setValue={setValue}
+                    />
+                  </div>
                 </div>
 
                 {/* Card: Pricing */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                   <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4"> Pricing </h2>
-                   <div className="space-y-4">
-                     <div>
-                       <label htmlFor="price" className={labelClasses}> Price (₹) </label>
-                       <input type="number" id="price" step="0.01" {...register("price", { valueAsNumber: true })} className={getInputClasses("price")} placeholder="0.00" />
-                       <p className={errorClasses}>{errors.price?.message}</p>
-                     </div>
-                     <div>
-                       <label htmlFor="originalPrice" className={labelClasses}> Original Price (₹) (Optional) </label>
-                       <input type="number" id="originalPrice" step="0.01" {...register("originalPrice", { valueAsNumber: true })} className={getInputClasses("originalPrice")} placeholder="0.00" />
-                       <p className={errorClasses}>{errors.originalPrice?.message}</p>
-                     </div>
-                   </div>
+                  <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                    {" "}
+                    Pricing{" "}
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="price" className={labelClasses}>
+                        {" "}
+                        Price (₹){" "}
+                      </label>
+                      <input
+                        type="number"
+                        id="price"
+                        step="0.01"
+                        {...register("price", { valueAsNumber: true })}
+                        className={getInputClasses("price")}
+                        placeholder="0.00"
+                      />
+                      <p className={errorClasses}>{errors.price?.message}</p>
+                    </div>
+                    <div>
+                      <label htmlFor="originalPrice" className={labelClasses}>
+                        {" "}
+                        Original Price (₹) (Optional){" "}
+                      </label>
+                      <input
+                        type="number"
+                        id="originalPrice"
+                        step="0.01"
+                        {...register("originalPrice", { valueAsNumber: true })}
+                        className={getInputClasses("originalPrice")}
+                        placeholder="0.00"
+                      />
+                      <p className={errorClasses}>
+                        {errors.originalPrice?.message}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div> {/* End Sidebar Column */}
-            </div> {/* End Grid */}
+              </div>{" "}
+              {/* End Sidebar Column */}
+            </div>{" "}
+            {/* End Grid */}
           </motion.div>
-        </div> {/* End Scrollable Area */}
-      </form> {/* End Form */}
+        </div>{" "}
+        {/* End Scrollable Area */}
+      </form>{" "}
+      {/* End Form */}
     </>
   );
 };
 
 export default AddProduct;
-
