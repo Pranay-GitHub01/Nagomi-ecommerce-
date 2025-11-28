@@ -18,7 +18,6 @@ import {
   Award
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
-import Review from "../components/Review/ReviewSection"; 
 import { useCartStore } from "../stores/useCartStore";
 import { useWishlistStore } from "../stores/useWishlistStore";
 import { Product } from "../types/index";

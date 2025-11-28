@@ -1,15 +1,18 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, BarChart2, Layers, Image, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, BarChart2, Layers, Image, Users, Settings,Line } from 'lucide-react';
 
 const adminNav = [
   { name: 'Dashboard', to: '/admin', icon: LayoutDashboard },
-  // { name: 'Abandoned Carts', to: '/admin/abandoned-carts', icon: ShoppingCart },
+  
   // { name: 'Product Insights', to: '/admin/insights', icon: BarChart2 },
   // { name: 'Arrange Products', to: '/admin/arrange', icon: Layers },
-  { name: 'Upload image', to: '/admin/uploadimg', icon: Image },
+  { name: 'Upload Image ', to: '/admin/uploadimg', icon: Image },
   // { name: 'User Access', to: '/admin/access', icon: Users },
-  // { name: 'Analytics', to: '/admin/analytics', icon: Settings },
+  
+  { name: 'Abandoned Carts', to: '/admin/abandoned-carts', icon: ShoppingCart },
+  { name: 'Analytics', to: '/admin/analytics', icon: Settings },
+
 ];
 
 const AdminLayout: React.FC = () => {
@@ -19,7 +22,7 @@ const AdminLayout: React.FC = () => {
       <aside className="w-64 bg-white border-r border-gray-100 shadow-lg flex flex-col py-8 px-4">
         <div className="mb-10 flex items-center gap-2">
           <img src="/logo.png" alt="Nagomi Logo" className="w-10 h-10 object-contain" />
-          <span className="font-bold text-xl text-primary-600 tracking-wide">Nagomi Admin</span>
+         <a href="/"> <span className="font-bold text-xl text-primary-600 tracking-wide">Nagomi Admin</span></a>
         </div>
         <nav className="flex-1 flex flex-col gap-2">
           {adminNav.map((item) => (
