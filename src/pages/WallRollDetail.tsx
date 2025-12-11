@@ -1,5 +1,5 @@
 // src/pages/WallRollDetail.tsx
-
+import { usePincodeCheck } from "../hooks/usePincodeCheck";
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -66,8 +66,24 @@ const WallRollDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState<number>(1); // State for roll quantity
-  const [includeInstallation, setIncludeInstallation] = useState(true);
-  const [pinCode, setPinCode] = useState('');
+
+  // const [includeInstallation, setIncludeInstallation] = useState(true);
+  // const [pinCode, setPinCode] = useState('');
+//--------------------------pincodes------------------------
+const { 
+  city,
+  isSupported,
+  deliveryDate,
+  loading: pinLoading,
+  checkPincode
+} = usePincodeCheck();
+
+const [pinCode, setPinCode] = useState("");
+const [includeInstallation, setIncludeInstallation] = useState(true); 
+
+
+//--------------------------pincodes ended------------------------
+
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isLoadingWishlist, setIsLoadingWishlist] = useState(false);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
@@ -378,23 +394,83 @@ const WallRollDetail: React.FC = () => {
                   <SupportModal open={supportModalOpen} onClose={() => setSupportModalOpen(false)} />
                </div>
 
+
+
+
+
+
+
+
+
               {/* PIN Code & Delivery */}
                <div>
                  <label htmlFor="pincode-input" className="block text-sm font-semibold text-[#172b9b] mb-1 font-lora">Check Delivery {includeInstallation ? '& Installation' : ''}</label>
                  <div className="flex gap-2">
-                     <input id="pincode-input" type="text" value={pinCode} onChange={(e) => setPinCode(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6} className="w-32 px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-[#172b9b] focus:border-[#172b9b] font-lora text-sm" placeholder="Enter PIN code" />
+                     <input
+  id="pincode-input"
+  type="text"
+  value={pinCode}
+  onChange={(e) => setPinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+  onBlur={() => {
+    if (pinCode.length === 6) checkPincode(pinCode);
+  }}
+  maxLength={6}
+  className="w-32 px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-[#172b9b] focus:border-[#172b9b] font-lora text-sm"
+  placeholder="Enter PIN code"
+/>
+
+{pinLoading && (
+  <div className="text-xs text-gray-500 mt-1 font-lora">Checking…</div>
+)}
+
+{!pinLoading && pinCode.length === 6 && city && isSupported && (
+  <div className="text-xs text-green-700 mt-1 font-lora">
+    ✓ Delivery & Installation available in {city}.  
+    <br />Expected delivery: {deliveryDate}
+  </div>
+)}
+
+{!pinLoading && pinCode.length === 6 && city && !isSupported && (
+  <div className="text-xs text-red-600 mt-1 font-lora">
+    Delivery available in {city}, but installation is not offered here.
+  </div>
+)}
+
+{pinCode.length > 0 && pinCode.length < 6 && (
+  <div className="text-xs text-red-600 mt-1 font-lora">
+    Please enter a valid 6-digit PIN code.
+  </div>
+)}
+
                  </div>
                  {pinCode.length === 6 && ( <div className="text-xs text-green-700 mt-1 font-lora"> ✓ Delivery {includeInstallation ? '& Installation available!' : 'available!'} Expected by {getDeliveryDate()}. </div> )}
                   {pinCode.length > 0 && pinCode.length < 6 && ( <div className="text-xs text-red-600 mt-1 font-lora"> Please enter a valid 6-digit PIN code. </div> )}
                </div>
 
+
+
+
+
               {/* Installation Option */}
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="install-checkbox-roll" checked={includeInstallation} onChange={(e) => setIncludeInstallation(e.target.checked)} className="w-4 h-4 text-[#172b9b] border-gray-300 rounded focus:ring-[#172b9b] focus:ring-offset-1" />
-                <label htmlFor="install-checkbox-roll" className="text-sm font-medium text-gray-700 font-lora">
-                  Include installation (+ ₹{installationCostPerRoll}/roll) {/* Updated label */}
-                </label>
-              </div>
+              <div className="flex items-center gap-2 mt-2">
+  <input
+    type="checkbox"
+    id="install-checkbox-roll"
+    checked={includeInstallation}
+    disabled={!isSupported}
+    onChange={(e) => setIncludeInstallation(e.target.checked)}
+    className="w-4 h-4 text-[#172b9b] border-gray-300 rounded 
+               disabled:opacity-40 disabled:cursor-not-allowed"
+  />
+
+  <label htmlFor="install-checkbox-roll" className="text-sm font-medium text-gray-700 font-lora">
+    Include installation (+ ₹450/roll)
+    {!isSupported && (
+      <span className="text-red-600 ml-1">(Not available in your city)</span>
+    )}
+  </label>
+</div>
+
 
               {/* Final Price Display */}
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">

@@ -22,7 +22,7 @@ const AdminLayout: React.FC = () => {
       <aside className="w-64 bg-white border-r border-gray-100 shadow-lg flex flex-col py-8 px-4">
         <div className="mb-10 flex items-center gap-2">
           <img src="/logo.png" alt="Nagomi Logo" className="w-10 h-10 object-contain" />
-         <a href="/"> <span className="font-bold text-xl text-primary-600 tracking-wide">Nagomi Admin</span></a>
+          <span className="font-bold text-xl text-primary-600 tracking-wide">Nagomi Admin</span>
         </div>
         <nav className="flex-1 flex flex-col gap-2">
           {adminNav.map((item) => (
