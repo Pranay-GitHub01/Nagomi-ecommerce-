@@ -1,13 +1,14 @@
+// 
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Product } from "../../types";
-import { Search, Heart, ShoppingCart, User, Menu, X } from "lucide-react";
+import { Search, Heart, ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react"; // Added ChevronDown
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../stores/useAuthStore";
 import { useCartStore } from "../../stores/useCartStore";
 import { useWishlistStore } from "../../stores/useWishlistStore";
 import { API_BASE_URL } from "../../api/config";
-import { CgProductHunt } from "react-icons/cg";
+// import { CgProductHunt } from "react-icons/cg"; // Unused import removed for cleanliness
 
 const PRIMARY_COLOR_TEXT = "text-blue-900";
 const SECONDARY_COLOR_TEXT = "text-blue-800";
@@ -17,6 +18,14 @@ const BG_COLOR_LIGHT = "bg-white";
 
 const ACTIVE_LINK_CLASSES = `${PRIMARY_COLOR_TEXT} font-bold border-b-2 border-blue-700 pb-1`;
 const INACTIVE_LINK_CLASSES = `${SECONDARY_COLOR_TEXT} font-semibold ${ACCENT_COLOR_HOVER} hover:border-b-2 hover:border-blue-300 pb-1`;
+
+// Define Shop Categories
+const shopCategories = [
+  { name: "Peel-n-Stick", href: "/peel-n-stick" },
+  { name: "Wallpaper Rolls", href: "/wallroll" },
+  { name: "Customised Wallpapers", href: "/wallpapers" },
+  {name:"Luxe Collections",href:"/luxe"} // Added an extra one for layout balance
+];
 
 const navigation = [
   { name: "Bestsellers", href: "/bestsellers" },
@@ -28,6 +37,11 @@ const Navbar: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // New States for Shop Dropdowns
+  const [isShopHovered, setIsShopHovered] = useState(false);
+  const [isMobileShopExpanded, setIsMobileShopExpanded] = useState(false);
+
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -109,6 +123,7 @@ const Navbar: React.FC = () => {
   const navigateAndClose = (path: string) => {
     navigate(path);
     setIsMobileMenuOpen(false);
+    setIsMobileShopExpanded(false);
   };
 
   const getLinkClasses = (href: string) => {
@@ -157,7 +172,45 @@ const Navbar: React.FC = () => {
             </Link>
 
             {/* Desktop Navigation - Hidden on mobile */}
-            <div className="hidden lg:flex items-center space-x-8 ">
+            <div className="hidden lg:flex items-center space-x-8">
+              
+              {/* --- NEW SHOP NOW DROPDOWN --- */}
+              <div 
+                className="relative group h-full flex items-center"
+                onMouseEnter={() => setIsShopHovered(true)}
+                onMouseLeave={() => setIsShopHovered(false)}
+              >
+                <button 
+                  className={`flex items-center gap-1 text-base tracking-wide transition-colors ${INACTIVE_LINK_CLASSES} border-none`}
+                >
+                  Shop Now
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isShopHovered ? "rotate-180" : ""}`} />
+                </button>
+
+                <AnimatePresence>
+                  {isShopHovered && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-0 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50"
+                    >
+                      {shopCategories.map((category) => (
+                        <Link
+                          key={category.name}
+                          to={category.href}
+                          className={`block px-4 py-3 text-sm ${SECONDARY_COLOR_TEXT} hover:bg-blue-50 hover:text-blue-900 transition-colors`}
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              {/* --- END SHOP NOW DROPDOWN --- */}
+
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -283,7 +336,6 @@ const Navbar: React.FC = () => {
                         <div className="flex flex-col gap-2 pt-6">
                           <Link
                             to="/login"
-                            // THIS LINE IS FIXED
                             onClick={() => setIsProfileOpen(false)}
                             className={`w-full text-center ${ACCENT_BG} text-white font-semibold py-2 rounded-lg hover:bg-blue-800 transition`}
                           >
@@ -297,7 +349,6 @@ const Navbar: React.FC = () => {
                             Create Account
                           </Link>
 
-                          {/* --- ADDED DIVIDER AND ADMIN LINK --- */}
                           <div className="border-t border-gray-100 my-2"></div>
                           <Link
                             to="/admin"
@@ -306,7 +357,6 @@ const Navbar: React.FC = () => {
                           >
                             Admin Panel
                           </Link>
-                          {/* --- END OF ADDITION --- */}
                         </div>
                       )}
                     </motion.div>
@@ -338,9 +388,42 @@ const Navbar: React.FC = () => {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden bg-stone-50 border-t border-gray-100 shadow-inner z-40"
+            className="lg:hidden bg-stone-50 border-t border-gray-100 shadow-inner z-40 overflow-hidden"
           >
             <div className="flex flex-col px-4 py-4 space-y-2">
+              
+              {/* --- MOBILE SHOP NOW EXPANDABLE --- */}
+              <div>
+                <button
+                  onClick={() => setIsMobileShopExpanded(!isMobileShopExpanded)}
+                  className={`flex items-center justify-between w-full text-left py-2 px-3 text-lg font-medium transition-colors rounded-lg text-blue-900 hover:bg-blue-50`}
+                >
+                  Shop Now
+                  <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isMobileShopExpanded ? "rotate-180" : ""}`} />
+                </button>
+                <AnimatePresence>
+                  {isMobileShopExpanded && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="pl-6 space-y-1 overflow-hidden"
+                    >
+                       {shopCategories.map((category) => (
+                          <button
+                            key={category.name}
+                            onClick={() => navigateAndClose(category.href)}
+                            className="block w-full text-left py-2 px-3 text-base text-blue-800 hover:text-blue-900"
+                          >
+                            {category.name}
+                          </button>
+                       ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              {/* --- END MOBILE SHOP NOW --- */}
+
               {navigation.map((item) => (
                 <button
                   key={item.name}

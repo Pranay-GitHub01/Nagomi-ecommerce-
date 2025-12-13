@@ -325,13 +325,13 @@ const PeelNstick: React.FC = () => {
         <div className="bg-white border-b border-gray-100 shadow-sm">
            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#172b9b] mb-3 font-seasons leading-tight"> Peel N Stick</h1>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#172b9b] mb-3 font-seasons leading-tight"> Peel-n-Stick</h1>
               <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto font-lora italic"> Transform every wall into a masterpiece with our aesthetically curated collection. </p>
             </motion.div>
              <nav className="flex items-center justify-center space-x-1.5 text-xs sm:text-sm text-gray-500 mt-4 font-lora">
                <Link to="/" className="hover:text-[#172b9b] transition-colors">Home</Link>
                <span>/</span>
-               <span className="text-gray-700 font-medium">Peel N Stick</span>
+               <span className="text-gray-700 font-medium">Peel-n-Stick</span>
              </nav>
           </div>
         </div>
