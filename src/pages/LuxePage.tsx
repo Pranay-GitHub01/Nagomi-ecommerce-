@@ -579,25 +579,22 @@ const LuxePage: React.FC = () => {
               ) : (
                 <>
                   {/* Grid - Ensure ProductCard is used */}
-                  <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {paginatedWallArt.map(
-                      (
-                        productItem,
-                        index // Renamed variable
-                      ) => (
-                        <motion.div
-                          key={productItem._id || productItem.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.2, delay: index * 0.03 }}
-                          className="min-w-0"
-                        >
-                          {/*here i want to show videos i am fetching from frontend for now..*/}
-
-                        </motion.div>
-                      )
-                    )}
-                  </div>
+                  {/* Grid - Ensure ProductCard is used */}
+<div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+  {paginatedWallArt.map((productItem, index) => (
+    <motion.div
+      key={productItem._id || productItem.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.03 }}
+      className="min-w-0"
+    >
+      {/* --- ADD THIS LINE --- */}
+      <ProductCard product={productItem} /> 
+      
+    </motion.div>
+  ))}
+</div>
 
                   {/* Pagination */}
                   {totalPages > 1 && (
@@ -882,17 +879,10 @@ const LuxePage: React.FC = () => {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
-
-      video 
-      <video width="320" height="240" controls autoplay src="videos/SrinathjiReel.mp4" type="video/mp4">
-      <source  src="videos/SrinathjiReel.mp4" type="video/mp4"/>
-      
-        Your browser does not support the video tag.
-      </video>
-                          
+      </AnimatePresence>                 
     </>
   );
 };
+
 
 export default LuxePage;
