@@ -13,9 +13,9 @@ const Footer: React.FC = () => {
                 <img src="/logo.png" alt="Nagomi Logo" className="w-14 h-14 object-contain mr-2" />
                 <span className="text-[2rem] font-seasons text-[#1428a0] font-semibold leading-none tracking-tight">Nagomi</span>
               </div>
-              <p className="font-light text-base leading-relaxed mt-1">
-                India's first brand for bespoke wall decor, transforming walls into soulful statements with wallpapers, art, panels, and custom murals.
-              </p>
+              <p className="font-light text-base leading-relaxed mt-1 text-left mx-auto max-w-4xl">
+  Nagomi brings soulful design to your walls with customised wallpapers, rolls, hand-embroidered art, and easy peel-and-stick options. Every design is tailored to your space, installed with care, and backed by our 2-year warranty. From concept to completion, we make transforming your space beautifully effortless.
+</p>
               {/* Optional: Full original description 
               <p className="font-light text-base leading-relaxed mt-1">
                 Nagomi is India's first brand offering bespoke, integrated wall decor solutions designed to bring peace and tranquility into your home...
@@ -88,9 +88,9 @@ const Footer: React.FC = () => {
         </div>
         
         {/* Sub-Footer (Unchanged from your original) */}
-        <div className="w-full text-center text-sm font-semibold font-serif py-3 bg-[#1a2236] text-white shadow-inner border-t-2 border-blue-900 tracking-wide">
+        {/* <div className="w-full text-center text-sm font-semibold font-serif py-3 bg-[#1a2236] text-white shadow-inner border-t-2 border-blue-900 tracking-wide">
           <span className="inline-block px-2 rounded-md bg-[#232b47] shadow text-white">Nagomi is a brand fully owned by Piyush Interiors</span>
-        </div>
+        </div> */}
       </footer>
     </>
   );

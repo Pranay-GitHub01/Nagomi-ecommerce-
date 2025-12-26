@@ -18,24 +18,20 @@ const getImageUrl = (images?: string[]) => {
 type ProductCardProps = { product: Product };
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  // FIX 1: Initialize state for the image source
   const initialImage = getImageUrl(product.images);
   const [imgSrc, setImgSrc] = useState<string>(initialImage);
 
-  // If the product prop changes, reset the image
   useEffect(() => {
     setImgSrc(getImageUrl(product.images));
   }, [product.images]);
 
   const handleImageError = () => {
-    setImgSrc('/images/placeholder.png'); // This now works because state is defined
+    setImgSrc('/images/placeholder.png');
   };
 
-  // Construct the link URL
   const productLink = `/${product.category}/${product._id || product.id}`;
 
   return (
-    // FIX 2: Wrap in Link so the card is clickable
     <Link to={productLink} className="h-full block">
       <motion.div
         layout
@@ -44,7 +40,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       >
         <div className="h-48 w-full bg-gray-100 flex items-center justify-center overflow-hidden">
           <img
-            src={imgSrc} // Use state here, not the raw variable
+            src={imgSrc}
             alt={product.name || 'product'}
             onError={handleImageError}
             className="object-cover h-full w-full"
@@ -87,7 +83,6 @@ const Bestsellers: React.FC = () => {
       })
       .then((data: Product[]) => {
         setProducts(data);
-        // Filter logic looks good
         const bestsellerProducts = data.filter(product => product.bestseller);
         const bestsellerCategories = new Set(bestsellerProducts.map(p => p.category || 'Other'));
         setCategories(['All', ...Array.from(bestsellerCategories)]);
@@ -140,8 +135,6 @@ const Bestsellers: React.FC = () => {
     ));
   };
 
-  // FIX 3: Removed the broken `const productLink = ...` line from here
-
   return (
     <div className="min-h-screen bg-[#f7f8fa] py-12 px-4">
       <motion.h1
@@ -152,6 +145,34 @@ const Bestsellers: React.FC = () => {
       >
         Bestsellers
       </motion.h1>
+
+      {/* --- VIDEO BANNER PLACEHOLDER START --- */}
+      {/* INSTRUCTIONS:
+          Replace the inner <div> below with your <video> or <iframe> tag.
+          Example:
+          <video autoPlay loop muted className="w-full h-full object-cover">
+            <source src="/your-video.mp4" type="video/mp4" />
+          </video>
+      */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="w-1/2 max-w-auto mx-auto h-[400px] md:h-[20vh] fitcontent bg-gray-200 rounded-2xl mb-12 overflow-hidden shadow-lg relative border border-gray-100"
+      >
+        <video
+          autoPlay
+          muted
+          playsInline
+          // loop={false} // Removed loop so it plays only once
+          className="w-full h-full object-cover"
+        >
+          {/* UPDATE THIS PATH TO YOUR ACTUAL VIDEO FILE */}
+          <source src="/home vdos/BestSellerBanner.MP4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </motion.div>
+      {/* --- VIDEO BANNER PLACEHOLDER END --- */}
 
       {/* --- Category Filter Section --- */}
       {!loading && !error && categories.length > 2 && (
@@ -180,7 +201,7 @@ const Bestsellers: React.FC = () => {
       )}
 
       {/* --- Product Grid --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-7xl mx-auto">
           {renderContent()}
       </div>
     </div>

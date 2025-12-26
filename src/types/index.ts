@@ -24,6 +24,7 @@ export interface Product {
   country: string;
   phone: string;
   sequence:string;
+  topPick?: boolean;
 }
 
 export interface CartItem {

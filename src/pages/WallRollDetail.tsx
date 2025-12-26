@@ -25,6 +25,7 @@ import { Product } from '../types'; // Adjust path
 import { useAuthStore } from '../stores/useAuthStore'; // Adjust path
 import { FaWhatsapp } from 'react-icons/fa';
 import ReviewSection from '../components/Review/ReviewSection';
+import ReviewSection2 from "../components/Review/ReviewSection2";
 
 // --- Modals ---
 // Simple Support Modal
@@ -79,7 +80,7 @@ const {
 } = usePincodeCheck();
 
 const [pinCode, setPinCode] = useState("");
-const [includeInstallation, setIncludeInstallation] = useState(true); 
+const [includeInstallation, setIncludeInstallation] = useState(false);
 
 
 //--------------------------pincodes ended------------------------
@@ -335,7 +336,7 @@ const [includeInstallation, setIncludeInstallation] = useState(true);
               {product.bestseller && ( <span className="inline-block bg-[#172b9b] text-white px-3 py-1 rounded text-sm font-bold"> BESTSELLER </span> )}
               <h1 className="text-3xl sm:text-4xl font-bold text-[#172b9b] font-seasons leading-tight">{product.name}</h1>
               {/* Ratings */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" style={{ marginTop: '0px' }}>
                 <div className="flex items-center text-yellow-500"> {[...Array(5)].map((_, i) => (<Star key={i} className="w-5 h-5 fill-current" />))} </div>
                 <span className="text-sm text-gray-700">4.9 |</span> {/* Example */}
                 <span className="text-sm text-gray-700 underline cursor-pointer"> 20 ratings </span> {/* Example */}
@@ -344,13 +345,16 @@ const [includeInstallation, setIncludeInstallation] = useState(true);
               {/* Price per Item */}
               <div className="flex items-baseline gap-2 flex-wrap relative">
                 <span className="text-3xl font-bold text-[#1428a0]">
-                  ₹{pricePerRoll.toLocaleString('en-IN')}
+                  ₹{parseInt(pricePerRoll.toLocaleString('en-IN'))}
                 </span>
                  {originalPricePerRoll > pricePerRoll && (
                    <span className="text-lg text-gray-400 line-through">
-                      ₹{originalPricePerRoll.toLocaleString('en-IN')}
+                      ₹{parseInt(originalPricePerRoll.toLocaleString('en-IN'))}
                    </span>
+                  
                  )}
+
+
                 {/* Updated text */}
                 <span className="text-sm text-gray-500">per roll</span>
                    {/* Tooltip for roll coverage */}
@@ -365,12 +369,12 @@ const [includeInstallation, setIncludeInstallation] = useState(true);
                       </span>
                    )}
               </div>
-              <p className="text-sm text-gray-500 font-lora italic -mt-4">inclusive of all taxes</p>
+              <p className="text-sm text-gray-500 font-lora italic" style={{margin:"-3px"}}>inclusive of all taxes</p>
 
               {/* Size Display */}
               <div>
                  <label className="block text-sm font-semibold text-[#172b9b] mb-1 font-lora">Size</label>
-                 <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 font-lora">
+                 <div className="px-3 w-fit py-2 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 font-lora">
                      {sizeDisplay}
                  </div>
               </div>
@@ -466,7 +470,7 @@ const [includeInstallation, setIncludeInstallation] = useState(true);
   <label htmlFor="install-checkbox-roll" className="text-sm font-medium text-gray-700 font-lora">
     Include installation (+ ₹450/roll)
     {!isSupported && (
-      <span className="text-red-600 ml-1">(Not available in your city)</span>
+      <span className="text-red-600 ml-1">(Enter Pin Code)</span>
     )}
   </label>
 </div>
@@ -476,11 +480,11 @@ const [includeInstallation, setIncludeInstallation] = useState(true);
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                  <div className="text-sm text-gray-600 font-lora mb-1">Total Estimated Price ({quantity} Roll{quantity > 1 ? 's' : ''}):</div>
                   <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="text-3xl font-bold text-[#172b9b]"> ₹{finalPrice.toLocaleString('en-IN')} </span>
-                      {originalFinalPrice > finalPrice && ( <span className="text-base text-gray-400 line-through"> ₹{originalFinalPrice.toLocaleString('en-IN')} </span> )}
+                      <span className="text-3xl font-bold text-[#172b9b]"> ₹{parseInt(finalPrice).toLocaleString('en-IN')} </span>
+                      {originalFinalPrice > finalPrice && ( <span className="text-base text-gray-400 line-through"> ₹{parseInt(originalFinalPrice).toLocaleString('en-IN')} </span> )}
                   </div>
                   <div className="text-xs text-gray-500 font-lora mt-1"> (Incl. product, {includeInstallation ? 'installation &' : '&'} taxes) </div>
-                  {finalPrice > 3999 && ( <div className="mt-2 text-xs text-green-700 font-semibold font-lora"> 🎉 Yay! Free shipping included! </div> )}
+                  {(finalPrice) > 3999 && ( <div className="mt-2 text-xs text-green-700 font-semibold font-lora"> 🎉 Yay! Free shipping included! </div> )}
               </div>
 
               {/* Action Buttons */}
@@ -538,11 +542,10 @@ const [includeInstallation, setIncludeInstallation] = useState(true);
                ))}
              </div>
            </div>
-           <ReviewSection/>
-
-
-        </div>
+        </div>   
       </div>
+      <ReviewSection2 productName={product.name || 'Wallpaper Roll'} />
+       <ReviewSection   productId={product._id || product.id} productName={product.name || 'Wallpaper Roll'} />
     </>
   );
 };

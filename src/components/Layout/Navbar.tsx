@@ -10,6 +10,11 @@ import { useWishlistStore } from "../../stores/useWishlistStore";
 import { API_BASE_URL } from "../../api/config";
 // import { CgProductHunt } from "react-icons/cg"; // Unused import removed for cleanliness
 
+import { FaWhatsapp } from 'react-icons/fa';
+
+
+
+
 const PRIMARY_COLOR_TEXT = "text-blue-900";
 const SECONDARY_COLOR_TEXT = "text-blue-800";
 const ACCENT_COLOR_HOVER = "hover:text-blue-900";
@@ -139,7 +144,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       {/* Announcement Banner */}
-      <div className="w-full z-50">
+      <div className="w-full z-50 flex">
         <div
           className="relative w-full h-8 flex items-center overflow-hidden"
           style={{ background: "#1d4ed8" }}
@@ -148,15 +153,21 @@ const Navbar: React.FC = () => {
             <div
               className="whitespace-nowrap font-medium text-sm animate-marquee px-4 text-white"
               style={{
-                animation: "marquee 25s linear infinite",
+                animation: "marquee 19s linear infinite",
                 minWidth: "100%",
               }}
             >
               FREE Customisation & Installation Support | FREE Shipping on
               Orders &gt; Rs. 3999
+
+              
             </div>
+            
           </div>
+          
         </div>
+        <div className="bg-green-500 h-8 w-20 flex justify-center
+          items-center gap-2"> <FaWhatsapp></FaWhatsapp><a href="https://wa.me/919999999999" className="text-white font-500">Order</a></div>
       </div>
       {/* Main Navbar */}
       <nav className={`${BG_COLOR_LIGHT} border-b w-full h-18 border-gray-100`}>
